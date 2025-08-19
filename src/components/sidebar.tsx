@@ -1,6 +1,7 @@
 'use client'
 
-import { useMenu } from '@/app/context';
+import { useM } from '@/app/context';
+import Link from 'next/link';
 import React from 'react'
 import { BsArrowLeft } from 'react-icons/bs';
 import { FaBell, FaCalendar, FaListCheck, FaNewspaper, FaRing, FaSuitcase, FaUserGroup } from 'react-icons/fa6';
@@ -21,7 +22,7 @@ const SideBar = () => {
         {
             id:1,
             ico: <FaSuitcase/>,
-            path: "/dashboard"
+            path: "/customers"
         },
         {
             id:2,
@@ -51,7 +52,7 @@ const SideBar = () => {
     ]
 
 
-    const {isOpen, toggleMenu} = useMenu()
+    const {isOpen, toggleMenu} = useM()
 
   return (
     <div className={`aside transition-all duration-100 absolute py-3 px-4 lg:left-0 lg:relative flex col col-span-1 flex-col gap-4 items-center border-r h-[645px]
@@ -63,8 +64,8 @@ const SideBar = () => {
       {
         sideIcons.map(item=>{
             return (
-                <div key={item.id} className="ico flex items-center justify-center text-lg w-14 h-14 rounded-[50%] text-[#514EF3] transition-all cursor-pointer border-2 hover:text-white hover:bg-[#514EF3] ">
-                    {item.ico}
+                <div onClick={toggleMenu} key={item.id} className="ico flex items-center justify-center text-lg w-14 h-14 rounded-[50%] text-[#514EF3] transition-all cursor-pointer border-2 hover:text-white hover:bg-[#514EF3] ">
+                    <Link href={item.path}>{item.ico}</Link>
                 </div>
             )
         })

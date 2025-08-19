@@ -5,12 +5,15 @@ import Image from 'next/image'
 import { FaClosedCaptioning, FaPlus } from 'react-icons/fa6'
 import { FaSearch, FaUserCircle } from 'react-icons/fa'
 import { MdClose, MdMenu } from 'react-icons/md'
-import { useMenu } from '@/app/context'
+import { useM } from '@/app/context'
 
 
 const Header:React.FC = () => {
 
-  const {isOpen, toggleMenu} = useMenu()
+  const {header, toggleMenu} = useM()
+
+  console.log(header);
+  
   const [isOpenProfile, setIsOpenProfile] = useState(false);
 
   return (
@@ -25,7 +28,7 @@ const Header:React.FC = () => {
           <span onClick={toggleMenu} className='block lg:hidden'>
             <MdMenu/>
           </span>
-          <h2 className='text-2xl font-bold ml-6'>Dashboard</h2>
+          <h2 className='text-2xl font-bold ml-6'>{header}</h2>
         </div>
         <div className="col relative col-span-3 bg-[#EEF6FBE5] py-3 px-4 flex items-center justify-end">
              <div

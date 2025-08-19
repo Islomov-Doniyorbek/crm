@@ -1,34 +1,47 @@
-'use client'
-import { createContext, useContext, useState } from "react";
+'use client';
 
-type context = {
-    isOpen: boolean;
-    toggleMenu: () =>void;
-}
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
+type MenuContextType = {
+  isOpen: boolean;
+  toggleMenu: () => void;
+  setHeaderTitle: (title: string) => void;
+  header: string;
+};
 
+export const Mcontext = createContext<MenuContextType | undefined>(undefined);
 
-export const Mcontext = createContext<context | undefined>(undefined)
+const MProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [header, setHeader] = useState('');
 
-const MProvider:React.FC<{ children: React.ReactNode}> = ({children}) =>{
-    const [isOpen, setIsOpen] = useState(false);
+  const toggleMenu = () => {
+    setIsOpen((prev) => !prev);
+  };
 
-    const toggleMenu = () =>{
-        setIsOpen((prev)=>!prev)
-    }
-
-    return (
-        <Mcontext.Provider value={{isOpen, toggleMenu}}>
-            {children}
-        </Mcontext.Provider>
-    )
+  const setHeaderTitle = (title: string) => {
+    setHeader(title);
+    console.log(title);
     
-}
-export const useMenu = () => {
+  };
+
+  useEffect(() => {
+    console.log('Header changed:', header);
+  }, [header]);
+
+  return (
+    <Mcontext.Provider value={{ isOpen, toggleMenu, setHeaderTitle, header }}>
+      {children}
+    </Mcontext.Provider>
+  );
+};
+
+export const useM = () => {
   const ctx = useContext(Mcontext);
   if (!ctx) {
-    throw new Error("useMenu faqat MenuProvider ichida ishlatiladi");
+    throw new Error('useM faqat MProvider ichida ishlatiladi');
   }
   return ctx;
 };
-export default MProvider
+
+export default MProvider;
