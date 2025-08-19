@@ -1,0 +1,76 @@
+'use client'
+
+import { useMenu } from '@/app/context';
+import React from 'react'
+import { BsArrowLeft } from 'react-icons/bs';
+import { FaBell, FaCalendar, FaListCheck, FaNewspaper, FaRing, FaSuitcase, FaUserGroup } from 'react-icons/fa6';
+import { MdSettings } from 'react-icons/md';
+
+interface sidebarProps {
+    id: number;
+    ico: React.ReactNode;
+    path: string;
+}
+const SideBar = () => {
+    const sideIcons:sidebarProps[] = [
+        {
+            id:0,
+            ico: <FaNewspaper/>,
+            path: "/dashboard"
+        },
+        {
+            id:1,
+            ico: <FaSuitcase/>,
+            path: "/dashboard"
+        },
+        {
+            id:2,
+            ico: <FaUserGroup/>,
+            path: "/dashboard"
+        },
+        {
+            id:3,
+            ico: <FaListCheck/>,
+            path: "/dashboard"
+        },
+        {
+            id:4,
+            ico: <FaCalendar/>,
+            path: "/dashboard"
+        },
+        {
+            id:5,
+            ico: <FaBell/>,
+            path: "/dashboard"
+        },
+        {
+            id:6,
+            ico: <MdSettings/>,
+            path: "/dashboard"
+        },
+    ]
+
+
+    const {isOpen, toggleMenu} = useMenu()
+
+  return (
+    <div className={`aside transition-all duration-100 absolute py-3 px-4 lg:left-0 lg:relative flex col col-span-1 flex-col gap-4 items-center border-r h-[645px]
+    ${isOpen ? "left-0 top-0 bg-blue-100 gap-3.5 h-screen" : "left-[-400px]"}`}
+    >
+        <div onClick={toggleMenu} key={79} className={`ico flex lg:hidden items-center justify-center text-lg w-14 h-14 rounded-[50%] text-[#514EF3] transition-all cursor-pointer border-2 hover:text-white hover:bg-[#514EF3] `}>
+            <BsArrowLeft/>
+        </div>
+      {
+        sideIcons.map(item=>{
+            return (
+                <div key={item.id} className="ico flex items-center justify-center text-lg w-14 h-14 rounded-[50%] text-[#514EF3] transition-all cursor-pointer border-2 hover:text-white hover:bg-[#514EF3] ">
+                    {item.ico}
+                </div>
+            )
+        })
+      }
+    </div>
+  )
+}
+
+export default SideBar
