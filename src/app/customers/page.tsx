@@ -22,7 +22,7 @@ interface deals {
   user_id: number;
   total_amount: number;
 }
-const Customers: React.FC<{id:number}> = (id) => {
+const Customers: React.FC = () => {
   // custom hooks
   const { setHeaderTitle } = useM()
   const {dealAll, customersAll, error} = useApi()
