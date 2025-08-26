@@ -21,13 +21,13 @@ const SideBar = () => {
         },
         {
             id:1,
-            ico: <FaSuitcase/>,
+            ico: <FaUserGroup/>,
             path: "/customers"
         },
         {
             id:2,
-            ico: <FaUserGroup/>,
-            path: "/dashboard"
+            ico: <FaNewspaper/>,
+            path: "/deals"
         },
         {
             id:3,
