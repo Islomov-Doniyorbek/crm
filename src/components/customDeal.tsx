@@ -2,15 +2,13 @@ import useApi from '@/app/queries';
 import React, { useEffect, useState } from 'react'
 import { FaDownLong, FaUpLong } from 'react-icons/fa6';
 import { MdClose } from 'react-icons/md';
-interface deals {
+interface Deal {
   id: number;
   customer_id: number;
   user_id: number;
-  title: string;
   total_amount: number;
-  paid_amount: number;
-  typeDeal: string;
 }
+
 // interface Customer {
 //   id: number;
 //   user_id: number;
@@ -20,7 +18,7 @@ interface deals {
 //   budjet: boolean;
 // }
 const CustomDeal:React.FC<{open: boolean, id: number, closed: () => void}> = ({open, id, closed}) => {
-  const [deals, setDeals] = useState<deals[]>([]);
+  const [deals, setDeals] = useState<Deal[]>([]);
 //   const [customers, setCustomers] = useState<Customer[]>([]);
 
   const {dealAll, userAll} = useApi()
@@ -68,16 +66,7 @@ console.log(userId);
                             {item.id}
                           </td>
                           <td className="px-2 py-2 border text-sm text-left">
-                            {item.title}
-                          </td>
-                          <td className="px-2 py-2 border text-sm text-left">
                             {item.total_amount}
-                          </td>
-                          <td className="px-2 py-2 border text-sm text-left">
-                            {item.paid_amount}
-                          </td>
-                          <td className={`${item.paid_amount - item.total_amount >= 0 ? "text-emerald-400" : "text-red-600"} px-2 py-2 border border-black text-4xl text-center`}>
-                            {item.paid_amount - item.total_amount > 0 ? <FaUpLong/> : <FaDownLong/>}
                           </td>
                         </tr>
                         ) : null

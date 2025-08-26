@@ -114,7 +114,7 @@ const Customers: React.FC = () => {
               </tbody>
             </table>
           </div>
-          <CustomDeal open={customDealBox} id={customerId} closed={()=>setCustomDealBox(false)}/>
+          {/* <CustomDeal open={customDealBox} id={customerId} closed={()=>setCustomDealBox(false)}/> */}
         </div>
       </div>
     </CustomLayout>
