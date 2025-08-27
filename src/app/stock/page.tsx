@@ -7,7 +7,7 @@ import { useM } from '../context'
 import { FaFilter } from 'react-icons/fa'
 import { useParams } from 'next/navigation'
 import useApi from '../queries'
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'
 
 // Interfaces
 interface Customers {
@@ -149,36 +149,36 @@ const Stock: React.FC = () => {
 
   // Delete stock (va xohlasangiz product) — endpoint kichik harflar bilan 'stocks'
   async function delItem(stockId: number, prdId: number) {
-    try {
-      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+  try {
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
-      // (Optional) confirm
-      if (!confirm("O'chirasizmi?")) return
+    if (!confirm("O'chirasizmi?")) return
 
-      // 1) Stockni o'chirish
-      await axios.delete(
-        `https://fast-simple-crm.onrender.com/api/v1/stocks/${stockId}`,
-        { headers }
-      )
+    // 1) Stockni o'chirish
+    await axios.delete(
+      `https://fast-simple-crm.onrender.com/api/v1/stocks/${stockId}`,
+      { headers }
+    )
 
-      // 2) Agar productni ham o'chirmoqchi bo'lsangiz — quyidagi qatorni qoldiring,
-      // aks holda olib tashlang.
-      await axios.delete(
-        `https://fast-simple-crm.onrender.com/api/v1/products/${prdId}`,
-        { headers }
-      )
+    // 2) Productni ham o'chirish (agar kerak bo'lsa)
+    await axios.delete(
+      `https://fast-simple-crm.onrender.com/api/v1/products/${prdId}`,
+      { headers }
+    )
 
-      // 3) UI yangilash
-      setStocks(prev => prev.filter(s => s.id !== stockId))
-      setProducts(prev => prev.filter(p => p.id !== prdId))
-    } catch (err: any) {
-      console.log("Delete error:", {
-        status: err?.response?.status,
-        data: err?.response?.data,
-        message: err?.message,
-      })
-    }
+    // 3) UI yangilash
+    setStocks(prev => prev.filter(s => s.id !== stockId))
+    setProducts(prev => prev.filter(p => p.id !== prdId))
+  } catch (err) {
+    const error = err as AxiosError
+
+    console.log("Delete error:", {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    })
   }
+}
 
   // Edit / update product (faqat misol uchun)
   const [editId, setEditId] = useState<number | null>(null)
