@@ -4,8 +4,11 @@ import { useM } from '@/app/context';
 import Link from 'next/link';
 import React from 'react'
 import { BsArrowLeft } from 'react-icons/bs';
-import { FaBell, FaCalendar, FaListCheck, FaNewspaper, FaRing, FaSuitcase, FaUserGroup } from 'react-icons/fa6';
-import { MdSettings } from 'react-icons/md';
+import { FaHandshake } from 'react-icons/fa';
+import { FaBell, FaBoxArchive, FaCalendar, FaListCheck, FaNewspaper, FaRing, FaSuitcase, FaUserGroup } from 'react-icons/fa6';
+import { GiHand } from 'react-icons/gi';
+import { HiArchiveBox } from 'react-icons/hi2';
+import { MdDashboard, MdSettings } from 'react-icons/md';
 
 interface sidebarProps {
     id: number;
@@ -16,7 +19,7 @@ const SideBar = () => {
     const sideIcons:sidebarProps[] = [
         {
             id:0,
-            ico: <FaNewspaper/>,
+            ico: <MdDashboard/>,
             path: "/dashboard"
         },
         {
@@ -26,13 +29,13 @@ const SideBar = () => {
         },
         {
             id:2,
-            ico: <FaNewspaper/>,
+            ico: <FaHandshake/>,
             path: "/deals"
         },
         {
             id:3,
-            ico: <FaListCheck/>,
-            path: "/dashboard"
+            ico: <FaBoxArchive/>,
+            path: "/stock"
         },
         {
             id:4,

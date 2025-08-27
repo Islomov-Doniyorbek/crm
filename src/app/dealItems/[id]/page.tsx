@@ -254,6 +254,22 @@ async function updateItem() {
   }
 }
 
+// DealItems komponenti ichida
+const mergedDealItems = dealItems.map(di => {
+  const product = products.find(p => p.id === di.product_id)
+
+  return {
+    ...di,          // dealItem ma’lumotlari (id, quantity, price)
+    product,        // shu dealItemga bog‘liq product
+  }
+})
+
+useEffect(()=>{
+  console.log(mergedDealItems);
+  console.log(dealItems);
+},[mergedDealItems])
+
+
 
 
 
@@ -313,57 +329,51 @@ async function updateItem() {
               </thead>
 
               <tbody className="bg-white divide-y">
-                {products.length > 0 ? (
-                  products.map((prd, idx) => {
-                    const relatedDeal = dealItems.find(d => d.product_id === prd.id)
-                    return (
-                      <tr onClick={()=>{
-                        console.log(prd.id);
-                        console.log(relatedDeal);
-                        
-                      }
-                      } key={prd.id}>
-                        <td className="px-3 py-2">{idx + 1}</td>
-                        <td className="px-3 py-2">{prd.name}</td>
-                        <td className="px-3 py-2">{prd.sku}</td>
-                        <td className="px-3 py-2">{prd.price}</td>
-                        <td className="px-3 py-2">{prd.unit}</td>
-                        <td className="px-3 py-2">{prd.description}</td>
-                        <td className="px-3 py-2">{relatedDeal ? relatedDeal.quantity : "-"}</td>
-                        <td className="px-3 py-2">{relatedDeal ? relatedDeal.price : ""}</td>
-                        <td className="px-3 py-2 flex gap-2">
-  {editId === prd.id ? (
-    <button 
-      onClick={updateItem} 
-      className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-md"
-    >
-      Save
-    </button>
-  ) : (
-    <button 
-      onClick={() => startEdit(prd, relatedDeal ? relatedDeal : relatedDeal)} 
-      className="px-3 py-1 bg-yellow-400 hover:bg-yellow-500 text-white rounded-md"
-    >
-      Edit
-    </button>
-  )}
-  <button 
-    onClick={() => relatedDeal && delItem(relatedDeal.id, prd.id)} 
-    className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-md"
-  >
-    Remove
-  </button>
-</td>
-
-                      </tr>
-                    )
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={9} className='text-center py-4 text-gray-500'>Mahsulotlar mavjud emas</td>
+              {mergedDealItems.length > 0 ? (
+                mergedDealItems.map((item, idx) => (
+                  <tr key={item.id}>
+                    <td className="px-3 py-2">{idx + 1}</td>
+                    <td className="px-3 py-2">{item.product?.name}</td>
+                    <td className="px-3 py-2">{item.product?.sku}</td>
+                    <td className="px-3 py-2">{item.product?.price}</td>
+                    <td className="px-3 py-2">{item.product?.unit}</td>
+                    <td className="px-3 py-2">{item.product?.description}</td>
+                    <td className="px-3 py-2">{item.quantity}</td>
+                    <td className="px-3 py-2">{item.price}</td>
+                    <td className="px-3 py-2 flex gap-2">
+                      {editId === item.product?.id ? (
+                        <button 
+                          onClick={updateItem} 
+                          className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-md"
+                        >
+                          Save
+                        </button>
+                      ) : (
+                        <button 
+                          onClick={() => item.product && startEdit(item.product, item)} 
+                          className="px-3 py-1 bg-yellow-400 hover:bg-yellow-500 text-white rounded-md"
+                        >
+                          Edit
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => item.product && delItem(item.id, item.product.id)} 
+                        className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-md"
+                      >
+                        Remove
+                      </button>
+                    </td>
                   </tr>
-                )}
-              </tbody>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={9} className='text-center py-4 text-gray-500'>
+                    Mahsulotlar mavjud emas
+                  </td>
+                </tr>
+              )}
+            </tbody>
+
             </table>
           </div>
 
