@@ -18,20 +18,11 @@
     --foreground: #ededed;
   }
 }
+* {
+  transition: 0.9s all !important;
+  transition-delay: 1.8s;
+}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: "Open Sans", sans-serif;
-}
-.nextjs-toast {
-  display: none !important;
-}
-/* .open-sans-<uniquifier> {
-  font-family: "Open Sans", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: <weight>;
-  font-style: normal;
-  font-variation-settings:
-    "wdth" 100;
+/* p {
+  color: #009826;
 } */

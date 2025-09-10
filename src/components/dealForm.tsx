@@ -36,6 +36,7 @@ interface product {
 
 const DealForm: React.FC<{ open: boolean, closed: ()=> void }> = ({ open, closed }) => {
   const [note, setNote] = useState('');
+  const [mijoz, setMijoz] = useState('');
   const [custId, setCustId] = useState(0);
   const [userrId, setUserrId] = useState(0);
   const [totalAmount, setTotalAmount] = useState('');
@@ -74,6 +75,8 @@ const DealForm: React.FC<{ open: boolean, closed: ()=> void }> = ({ open, closed
     {headers})
 
     console.log(response.data);
+    setDealBox(false)
+    alert(`${mijoz} bilan bitim ochildi!`)
     
     }catch (err: unknown) {
     if (err instanceof Error) {
@@ -119,6 +122,8 @@ const DealForm: React.FC<{ open: boolean, closed: ()=> void }> = ({ open, closed
                               setDealBox(true);
                               setCustId(item.id);
                               setUserrId(item.user_id)
+                              setMijoz(item.name)
+                              closed()
                               }
                             } />
                         </div>

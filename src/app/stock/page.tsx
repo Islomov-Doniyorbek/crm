@@ -1,369 +1,268 @@
 'use client'
-
 import React, { useEffect, useState } from 'react'
 import CustomLayout from '../customLayout'
 import SideBar from '@/components/sidebar'
-import { useM } from '../context'
-import { FaFilter } from 'react-icons/fa'
-import { useParams } from 'next/navigation'
-import useApi from '../queries'
-import axios, { AxiosError } from 'axios'
+import { FaCheckCircle, FaClosedCaptioning, FaEdit, FaPlusCircle } from 'react-icons/fa';
+import { MdAddToQueue, MdClose, MdCloseFullscreen, MdRemoveCircle } from 'react-icons/md';
+import { FaCircle, FaCirclePlus } from 'react-icons/fa6';
+import axios from 'axios';
+import { useM } from '../context';
 
-// Interfaces
-interface Customers {
-  id: number
-  user_id: number
-  phone: string
-  name: string
-  about: string
+interface Contract {
+  id: number;
+  korxona: string;
+  stir: string;
+  shartnoma: string;
+  sana: string;
+  raqam: string;
+  type: "PURCHASE" | "SALES";
+}
+interface ContractProduct {
+  id: number;
+  date: string;
+  movement_type: "IN";
+  quantity: string;
+  price: string;
+  comment: string;
+}
+interface ContractPayment {
+  id: number;
+  date: string;
+  movement_type: "OUT";
+  total_amount: string;
+  comment: string;
 }
 interface Product {
-  id: number
-  name: string
-  sku: string
-  price: number
-  unit: string
-  description: string
-}
-interface DealItem {
-  id: number
-  product_id: number
-  quantity: number
-  price: number
-}
-interface Stock {
-  id: number
-  product_id: number
-  quantity: number
+  id: number;
+  prdName: string;
+  sku: string;
+  quantity: number;
+  unit: string;
+  price: string;
+  description: string;
 }
 
-const Stock: React.FC = () => {
-  const { setHeaderTitle } = useM()
-  const { customersAll } = useApi()
+const Import = () => {
+    // const [product, setProduct] = useState<Product[]>([
+    //     {
+    //         id: 0,
+    //         name: "Sabzi",
+    //         sku: "qx-798",
+    //         quantity: 163,
+    //         unit: "kg",
+    //         price: "11200",
+    //         description: "qizil sabzi"
+    //     },
+    // ])
+const [form, setForm] = useState<Product>(
+        {
+            id: 0,
+            prdName: "",
+            sku: "",
+            quantity: 0,
+            unit: "",
+            price: "",
+            description: ""
+        }
+    
+);
 
-  const [customerName, setCustomerName] = useState("")
-  const [products, setProducts] = useState<Product[]>([])
-  const [stocks, setStocks] = useState<Stock[]>([])
-  
-  // Form states
-  const [prdName, setPrdName] = useState('')
-  const [prdSku, setPrdSku] = useState('')
-  const [prdPrice, setPrdPrice] = useState<number>(0)
-  const [prdUnit, setPrdUnit] = useState('')
-  const [prdDesc, setPrdDesc] = useState('')
-  const [stockQuantity, setStockQuantity] = useState<number>(0)
+const [product, setProduct] = useState<Product[]>([]);
 
-  const params = useParams<{ id: string }>()
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
-  
-  // Header title
-  useEffect(() => {
-    setHeaderTitle("Ombor")
-  }, [setHeaderTitle])
-  
-  // Customer name by id
-  useEffect(() => {
-    if (customersAll.length > 0 && params?.id) {
-      const found = customersAll.find(e => e.id === parseInt(params.id))
-      if (found) setCustomerName(found.name)
-    }
-  }, [customersAll, params?.id])
-  
-  // Fetch products & stocks
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const headers = token ? { Authorization: `Bearer ${token}` } : {}
-        
-        const resProducts = await axios.get<Product[]>(
-          "https://fast-simple-crm.onrender.com/api/v1/products",
-          { headers }
-        )
-        setProducts(resProducts.data)
-        
-        const resStock = await axios.get<Stock[]>(
-          "https://fast-simple-crm.onrender.com/api/v1/stocks",
-          { headers }
-        )
-        setStocks(resStock.data)
-        
-      } catch (err) {
-        console.log("Fetch error:", err)
-      }
-    }
-    fetchData()
-  }, [token])
-
-  // Create product + stock (product_id bilan stock post qilish)
-  async function postProduct() {
-    try {
-      const headers = token ? { Authorization: `Bearer ${token}` } : {}
-
-      const product = {
-        user_id: 1,
-        name: prdName,
-        sku: prdSku,
-        price: Number(prdPrice),
-        unit: prdUnit,
-        description: prdDesc,
-      }
-
-      // 1) Product yaratish
-      const resProduct = await axios.post<Product>(
-        "https://fast-simple-crm.onrender.com/api/v1/products",
-        product,
-        { headers }
-      )
-
-      const createdProduct = resProduct.data
-
-      // 2) Stock yaratish product_id bilan
-      const stockPayload = {
-        product_id: createdProduct.id,
-        quantity: Number(stockQuantity)
-      }
-
-      const resStock = await axios.post<Stock>(
-        "https://fast-simple-crm.onrender.com/api/v1/stocks",
-        stockPayload,
-        { headers }
-      )
-
-      // 3) Lokal state yangilash
-      setProducts(prev => [...prev, createdProduct])
-      setStocks(prev => [...prev, resStock.data])
-
-      // Formni tozalash
-      setPrdName('')
-      setPrdSku('')
-      setPrdPrice(0)
-      setPrdUnit('')
-      setPrdDesc('')
-      setStockQuantity(0)
-
-      console.log("Created:", createdProduct, resStock.data)
-    } catch (err) {
-      console.log("Post error:", err)
-    }
-  }
-
-  // Delete stock (va xohlasangiz product) — endpoint kichik harflar bilan 'stocks'
-  async function delItem(stockId: number, prdId: number) {
-  try {
-    const headers = token ? { Authorization: `Bearer ${token}` } : {}
-
-    if (!confirm("O'chirasizmi?")) return
-
-    // 1) Stockni o'chirish
-    await axios.delete(
-      `https://fast-simple-crm.onrender.com/api/v1/stocks/${stockId}`,
-      { headers }
-    )
-
-    // 2) Productni ham o'chirish (agar kerak bo'lsa)
-    await axios.delete(
-      `https://fast-simple-crm.onrender.com/api/v1/products/${prdId}`,
-      { headers }
-    )
-
-    // 3) UI yangilash
-    setStocks(prev => prev.filter(s => s.id !== stockId))
-    setProducts(prev => prev.filter(p => p.id !== prdId))
-  } catch (err) {
-    const error = err as AxiosError
-
-    console.log("Delete error:", {
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message,
-    })
-  }
-}
-
-  // Edit / update product (faqat misol uchun)
-  const [editId, setEditId] = useState<number | null>(null)
-  const [editStockId, setEditStockId] = useState<number | null>(null)
-
-function startEdit(prd: Product, stock?: Stock) {
-  setEditId(prd.id)
-  setPrdName(prd.name)
-  setPrdSku(prd.sku)
-  setPrdPrice(prd.price)
-  setPrdUnit(prd.unit)
-  setPrdDesc(prd.description)
-  
-  if (stock) {
-    setEditStockId(stock.id)
-    setStockQuantity(stock.quantity) 
-  }
-}
+const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { name, value } = e.target;
+  setForm(prev => ({
+    ...prev,
+    [name]: value
+  }));
+};
 
 
-  async function updateItem() {
-    if (!editId) return
-    try {
-      const headers = token ? { Authorization: `Bearer ${token}` } : {}
-
-      const updatedProduct = {
-        name: prdName,
-        sku: prdSku,
-        price: prdPrice,
-        unit: prdUnit,
-        description: prdDesc,
-      }
-
-      await axios.patch(
-        `https://fast-simple-crm.onrender.com/api/v1/products/${editId}`,
-        updatedProduct,
-        { headers }
-      )
-
-        const updatedDeal = {
-            quantity: stockQuantity,
+    const addPrd = async () => {
+        try {
+            const prd = {
+            name: form.prdName,
+            sku: form.sku,
+            unit: form.unit,
+            price: form.price,
+            description: form.description
         }
 
-        console.log(editStockId);
+        const token = localStorage.getItem("token");
+
+        const resAddPrd = await axios.post(
+            "https://fast-simple-crm.onrender.com/api/v1/products",
+            prd,
+            {
+                headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+                },
+            }
+        );
+
+
+        console.log(resAddPrd);
         
-        await axios.patch(
-        `https://fast-simple-crm.onrender.com/api/v1/stocks/${editStockId}`,
-        updatedDeal,
-        { headers }
-        )
+        }catch(error){
+            console.log(error);
+            
+        }
 
-      // Lokal UI yangilash
-      setProducts(prev => prev.map(p => p.id === editId ? { ...p, ...updatedProduct } : p))
-      setStocks(prev =>
-        prev.map(s => s.id === editStockId ? { ...s, quantity: stockQuantity } : s)
-      )
 
-      // Reset form
-      setEditId(null)
-      setEditStockId(null)
-      setPrdName('')
-      setPrdSku('')
-      setPrdPrice(0)
-      setPrdUnit('')
-      setPrdDesc('')
-    } catch (err) {
-      console.log("Update error:", err)
+    }
+    useEffect(()=>{
+        const getPrds = async () =>{
+
+            try {
+                const token = localStorage.getItem("token")
+                const resProduct = await axios.get("https://fast-simple-crm.onrender.com/api/v1/products/with-quantity", {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                })
+
+                console.log(resProduct);
+                setProduct(resProduct.data)
+            }catch(error){
+                console.log(error);
+                
+            }
+        }
+
+        getPrds()
+    }, [])
+
+    async function deleteItem(id:number) {
+    try{
+      const token = localStorage.getItem("token");
+      const res = await axios.delete(`https://fast-simple-crm.onrender.com/api/v1/products/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+
+      });
+        console.log(res);
+
+
+      
+      // Ichki jadvaldagi elementni o'chirish
+      setProduct(prev => prev.filter(item => item.id !== id));
+      // Status ma'lumotlarini yangilash
+    //   await fetchContractStatus();
+      
+    } catch(error){
+      console.log("O'chirishda xato:", error);
+      alert("O'chirishda xatolik yuz berdi");
     }
   }
+
+     const [isOpen, setIsOpen] = useState(false)
+    const {bg2, txt, mainBg} = useM()
 
   return (
     <CustomLayout>
-      <div className='customers relative main grid grid-cols-12 gap-2.5'>
-        <SideBar />
-
-        <div className="sect flex flex-col gap-6 w-full col-span-12 lg:col-span-11 px-6 py-6">
-
-          {/* Header */}
-          <div className="flex w-full justify-between items-center">
-            <h1 className="text-xl font-semibold text-gray-800">
-              Ombordagi mahsulotlar
-            </h1>
-            <div className="flex gap-3 items-center">
-              <select className='py-2 px-3 rounded-xl bg-indigo-500 text-white'>
-                <option value="1">1</option>
-                <option value="2">2</option>
-              </select>
-              <button className='py-2 px-3 rounded-xl bg-indigo-500 text-white flex gap-2 items-center'>
-                Filter <FaFilter />
-              </button>
-            </div>
-          </div>
-
-          {/* Table */}
+        <div className={`${mainBg} w-full px-6 py-6`}>
+          <h1 className={`text-xl font-bold mb-4 ${txt}`}>SKlad</h1>
           <div className="overflow-x-auto">
-            <table className="w-[1000px] border border-gray-300 text-sm shadow rounded-lg overflow-hidden">
-              <thead className="bg-gray-100 text-left">
-                <tr>
-                  <th className="px-3 py-2">T/R</th>
-                  <th className="px-3 py-2">Mahsulot nomi</th>
-                  <th className="px-3 py-2">SKU</th>
-                  <th className="px-3 py-2">Price</th>
-                  <th className="px-3 py-2">Unit</th>
-                  <th className="px-3 py-2">Tavsif</th>
-                  <th className="px-3 py-2">Stock Quantity</th>
-                  <th className="px-3 py-2 text-center">Amallar</th>
-                </tr>
-
-                {/* Add new row */}
-                <tr className="bg-white">
-                  <td className="px-3 py-2 text-gray-500">0</td>
-                  <td>
-                    <input value={prdName} onChange={e=>setPrdName(e.target.value)} className="w-full px-2 py-1 rounded-md outline-none focus:ring-2 focus:ring-indigo-400" placeholder='Mahsulot nomi' />
-                  </td>
-                  <td>
-                    <input value={prdSku} onChange={e=>setPrdSku(e.target.value)} className="w-full px-2 py-1 rounded-md outline-none focus:ring-2 focus:ring-indigo-400" placeholder='SKU' />
-                  </td>
-                  <td>
-                    <input value={prdPrice} onChange={e=>setPrdPrice(Number(e.target.value))} type="number" className="w-full px-2 py-1 rounded-md outline-none focus:ring-2 focus:ring-indigo-400" placeholder='Narxi' />
-                  </td>
-                  <td>
-                    <input value={prdUnit} onChange={e=>setPrdUnit(e.target.value)} className="w-full px-2 py-1 rounded-md outline-none focus:ring-2 focus:ring-indigo-400" placeholder='Birligi' />
-                  </td>
-                  <td>
-                    <input value={prdDesc} onChange={e=>setPrdDesc(e.target.value)} className="w-full px-2 py-1 rounded-md outline-none focus:ring-2 focus:ring-indigo-400" placeholder='Tavsif' />
-                  </td>
-                  <td>
-                    <input value={stockQuantity} onChange={e=>setStockQuantity(Number(e.target.value))} type="number" min={0} className="w-full px-2 py-1 rounded-md outline-none focus:ring-2 focus:ring-indigo-400" placeholder='Hajmi' />
-                  </td>
-                  <td className="text-center">
-                    <button onClick={postProduct} className='bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-lg'>+</button>
-                  </td>
-                </tr>
-              </thead>
-
-              <tbody className="bg-white divide-y">
-                {products.length > 0 ? (
-                  products.map((prd, idx) => {
-                    const relatedStock = stocks.find(s => s.product_id === prd.id)
-
-                    return (
-                      <tr key={prd.id}>
-                        <td className="px-3 py-2">{idx + 1}</td>
-                        <td className="px-3 py-2">{prd.name}</td>
-                        <td className="px-3 py-2">{prd.sku}</td>
-                        <td className="px-3 py-2">{prd.price}</td>
-                        <td className="px-3 py-2">{prd.unit}</td>
-                        <td className="px-3 py-2">{prd.description}</td>
-                        <td className="px-3 py-2">{relatedStock?.quantity ?? 0}</td>
-                        <td className="px-3 py-2 flex gap-2">
-                          {editId === prd.id ? (
-                            <button onClick={updateItem} className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-md">Save</button>
-                          ) : (
-                            <button 
-                                onClick={() => startEdit(prd, relatedStock)} 
-                                className="px-3 py-1 bg-yellow-400 hover:bg-yellow-500 text-white rounded-md"
-                                >
-                                Edit
+            <table className="border-collapse border border-gray-200 w-full text-sm shadow-md rounded-xl overflow-hidden">
+                <thead className={`${bg2} ${txt} uppercase tracking-wide`}>
+                    <tr>
+                        <th className="px-3 py-3 text-left">
+                            Tr
+                        </th>
+                        <th className="px-3 py-3 text-left">
+                            Nomi
+                        </th>
+                        <th className="px-3 py-3 text-left">
+                            SKU
+                        </th>
+                        <th className="px-3 py-3 text-left">
+                            Soni
+                        </th>
+                        <th className="px-3 py-3 text-left">
+                            Birligi
+                        </th>
+                        <th className="px-3 py-3 text-left">
+                            Narxi (1 birlikda)
+                        </th>
+                        <th className="px-3 py-3 text-left">
+                            Ta`rif
+                        </th>
+                         <th className="px-3 py-3 text-center flex items-center justify-center gap-2">
+                            Instr
+                            <button
+                              className="p-2 bg-emerald-500 hover:bg-emerald-600 transition text-white rounded-full shadow"
+                              onClick={() => setIsOpen(prev => !prev)}
+                            >
+                              <FaCirclePlus />
                             </button>
-                          )}
+                        </th>
+                    </tr>
 
-                          <button
-                            onClick={() => relatedStock && delItem(relatedStock.id, prd.id)}
-                            disabled={!relatedStock}
-                            className="px-3 py-1 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-md"
-                          >
-                            Remove
-                          </button>
+                     <tr className={`${isOpen ? "table-row" : "hidden"}`}>
+                        <td className="px-3 py-2 text-gray-500">#</td>
+                        <td><input className="w-11/12 border rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-400 outline-none" name="prdName" type='text' value={form.prdName} onChange={handleChange} /></td>
+                        <td><input className="w-11/12 border rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-400 outline-none" name="sku" type='text' value={form.sku} onChange={handleChange} /></td>
+                        <td></td>
+                        <td><input className="w-11/12 border rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-400 outline-none" name="unit" type='text' value={form.unit} onChange={handleChange} /></td>
+                        <td><input className="w-11/12 border rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-400 outline-none" name="price" type='text' value={form.price} onChange={handleChange} /></td>
+                        <td><input className="w-11/12 border rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-400 outline-none" name="description" type='text' value={form.description} onChange={handleChange} /></td>
+
+                        <td className="flex items-center justify-center gap-2">
+                        {false ? (
+                          <button className="px-3 py-1 bg-blue-500 hover:bg-blue-600 transition text-white rounded shadow">Save</button>
+                        ) : (
+                          <button onClick={addPrd} className="px-3 py-1 bg-emerald-500 hover:bg-emerald-600 transition text-white rounded shadow">+</button>
+                        )}
+                        <button className="p-2 bg-red-200 hover:bg-red-400 transition rounded-full text-gray-700">
+                          <MdClose onClick={() => setIsOpen(prev => !prev)} />
+                        </button>
                         </td>
-                      </tr>
-                    )
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={9} className='text-center py-4 text-gray-500'>Mahsulotlar mavjud emas</td>
-                  </tr>
-                )}
-              </tbody>
+                    </tr>
+                </thead>
+                <tbody className={`divide-y divide-gray-200 ${mainBg==="bg-gray-950" ? "text-white" : "text-black"} ${txt} `}>
+                    <tr className="hover:bg-red-50 transition">
+                        <td className="px-3 py-2">1</td>
+                        <td className="px-3 py-2">Stul</td>
+                        <td className="px-3 py-2">ST-798</td>
+                        <td className="px-3 py-2">12</td>
+                        <td className="px-3 py-2">komplekt</td>
+                        <td className="px-3 py-2">1 233 240</td>
+                        <td className="px-3 py-2">MDF</td>
+                        <td className="flex py-2 justify-center gap-2 items-center">
+                            <button className="p-2 bg-emerald-200 hover:bg-emerald-400 transition rounded-full"><MdAddToQueue /></button>
+                            <button className="p-2 bg-yellow-200 hover:bg-yellow-400 transition rounded-full"><FaEdit /></button>
+                            <button className="p-2 bg-red-200 hover:bg-red-400 transition rounded-full"><MdClose /></button>
+                        </td>
+                    </tr>
+                    {
+                        product.map(item=>{
+                            return (
+                                <tr key={item.id} className="hover:bg-red-50 transition">
+                                    <td className="px-3 py-2">{item.id}</td>
+                                    <td className="px-3 py-2">{item.name}</td>
+                                    <td className="px-3 py-2">{item.sku}</td>
+                                    <td className="px-3 py-2">{item.quantity}</td>
+                                    <td className="px-3 py-2">{item.unit}</td>
+                                    <td className="px-3 py-2">{item.price.toLocaleString().replace(/,/g, " ")}</td>
+                                    <td className="px-3 py-2">{item.description}</td>
+                                    <td className="flex py-2 justify-center gap-2 items-center">
+                                        <button className="p-2 bg-emerald-200 hover:bg-emerald-400 transition rounded-full"><MdAddToQueue /></button>
+                                        <button className="p-2 bg-yellow-200 hover:bg-yellow-400 transition rounded-full"><FaEdit /></button>
+                                        <button onClick={()=>deleteItem(item.id)} className="p-2 bg-red-200 hover:bg-red-400 transition rounded-full"><MdClose /></button>
+                                    </td>
+                                </tr>
+                            )
+                        })
+                    }
+                </tbody>
             </table>
           </div>
-
         </div>
-      </div>
     </CustomLayout>
   )
 }
 
-export default Stock
+export default Import

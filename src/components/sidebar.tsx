@@ -4,15 +4,16 @@ import { useM } from '@/app/context';
 import Link from 'next/link';
 import React from 'react'
 import { BsArrowLeft } from 'react-icons/bs';
-import { FaHandshake } from 'react-icons/fa';
+import { FaHandshake, FaShippingFast, FaUser } from 'react-icons/fa';
 import { FaBell, FaBoxArchive, FaCalendar, FaListCheck, FaNewspaper, FaRing, FaSuitcase, FaUserGroup } from 'react-icons/fa6';
-import { GiHand } from 'react-icons/gi';
+import { GiBuyCard, GiHand } from 'react-icons/gi';
 import { HiArchiveBox } from 'react-icons/hi2';
-import { MdDashboard, MdSettings } from 'react-icons/md';
+import { MdDashboard, MdPointOfSale, MdSettings } from 'react-icons/md';
 
 interface sidebarProps {
     id: number;
     ico: React.ReactNode;
+    title: string;
     path: string;
 }
 const SideBar = () => {
@@ -20,59 +21,60 @@ const SideBar = () => {
         {
             id:0,
             ico: <MdDashboard/>,
+            title: "Dashboard",
             path: "/dashboard"
         },
         {
             id:1,
-            ico: <FaUserGroup/>,
-            path: "/customers"
+            ico: <FaUser/>,
+            title: "Mijoz",
+            path: "/customer"
         },
         {
             id:2,
-            ico: <FaHandshake/>,
-            path: "/deals"
+            ico: <FaShippingFast/>,
+            title: "Yetkazib beruvchi",
+            path: "/suplier"
+        },
+        {
+            id:4,
+            ico: <MdPointOfSale/>,
+            title: "Sotuvlar",
+            path: "/sales"
+        },
+        {
+            id:5,
+            ico: <GiBuyCard/>,
+            title: "Xaridlar",
+            path: "/purchases"
         },
         {
             id:3,
             ico: <FaBoxArchive/>,
+            title: "Ombor",
             path: "/stock"
-        },
-        {
-            id:4,
-            ico: <FaCalendar/>,
-            path: "/dashboard"
-        },
-        {
-            id:5,
-            ico: <FaBell/>,
-            path: "/dashboard"
-        },
-        {
-            id:6,
-            ico: <MdSettings/>,
-            path: "/dashboard"
         },
     ]
 
-
-    const {isOpen, toggleMenu} = useM()
-
+    const {toggleMenu, isOpen, bg2, txt} = useM()
+    // const {isOpen, toggleMenu} = useM()
+// bg-[#013d8c]
   return (
-    <div className={`aside transition-all duration-100 absolute py-3 px-4 lg:left-0 lg:relative flex col col-span-1 flex-col gap-4 items-center border-r h-[645px]
-    ${isOpen ? "left-0 top-0 bg-blue-100 gap-3.5 h-screen" : "left-[-400px]"}`}
-    >
-        <div onClick={toggleMenu} key={79} className={`ico flex lg:hidden items-center justify-center text-lg w-14 h-14 rounded-[50%] text-[#514EF3] transition-all cursor-pointer border-2 hover:text-white hover:bg-[#514EF3] `}>
-            <BsArrowLeft/>
-        </div>
-      {
-        sideIcons.map(item=>{
-            return (
-                <div onClick={toggleMenu} key={item.id} className="ico flex items-center justify-center text-lg w-14 h-14 rounded-[50%] text-[#514EF3] transition-all cursor-pointer border-2 hover:text-white hover:bg-[#514EF3] ">
-                    <Link href={item.path}>{item.ico}</Link>
-                </div>
-            )
-        })
-      }
+    <div className={`absolute ${isOpen ? "left-0" : "-left-40"} -left-40 lg:relative lg:left-0 flex flex-col  items-center w-40 h-full py-3.5 ${bg2}`}>
+        {
+            sideIcons.map(item=>{
+                return (
+                    <Link onClick={()=>toggleMenu()} 
+                    className={`${bg2} py-4 w-full 
+                      flex ${txt}
+                     flex-col gap-1.5 rounded-l-4xl
+                     items-center hover:bg-white transition duration-700 hover:text-[#0053d9] hover:rounded-l-full`} key={item.id} href={item.path}>
+                            <span className='text-2xl'>{item.ico}</span>
+                            <span className='text-lg text-center'>{item.title}</span>
+                    </Link>
+                )
+            })
+        }
     </div>
   )
 }

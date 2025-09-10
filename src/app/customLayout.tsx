@@ -1,10 +1,14 @@
 import Header from '@/components/header'
+import SideBar from '@/components/sidebar'
 import React from 'react'
 const CustomLayout:React.FC<{ children: React.ReactNode}> = ({children}) => {
   return (
-      <div className="containerA min-h-screen w-full">
+      <div className="min-h-screen w-full relative overflow-hidden">
         <Header/>
-        {children}
+        <main className='flex w-full h-screen'>
+          <SideBar/>
+          {children}
+        </main>
       </div>
   )
 }

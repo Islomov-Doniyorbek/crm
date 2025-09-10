@@ -1,168 +1,122 @@
-'use client';
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import axios from "axios"
-import { jwtDecode } from 'jwt-decode';
-import useApi from './queries';
+'use client'
+import React, { createContext, useContext, useState } from 'react'
+import axiosInstance from './api'  // 🔥 shu joy muhim
+import useApi from './queries'
+
 type MenuContextType = {
-  isOpen: boolean;
-  toggleMenu: () => void;
-  setHeaderTitle: (title: string) => void;
-  login: (username: string, password: string) => void;
-  register: (email: string, password: string, fullname: string, username: string) => void;
-  addCustomer: (
-    name: string,
-    phone: string,
-    about: string
-  ) => void;
-  header: string;
-  currentUser: string;
-  setCurrentUser: React.Dispatch<React.SetStateAction<string>>;
-};
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  full_name: string;
-  // agar boshqa fieldlar bo‘lsa, qo‘shib ketsangiz bo‘ladi
+  isOpen: boolean
+  toggleMenu: () => void
+  setHeaderTitle: (title: string) => void
+  register: (
+    email: string,
+    password: string,
+    fullname: string,
+    username: string,
+    stir: string,
+    phone: string
+  ) => Promise<void>
+  login: (password: string, username: string) => Promise<void>
+  header: string,
+  bg: string,
+  bg2: string,
+  mainBg: string,
+  txt: string,
+  getTheme: (bg:string, txt:string, bg2:string, mainBg:string) => void
 }
 
-type MyToken = {
-  userId: string;
-  exp: number;   // muddati tugash vaqti (optional)
-  iat?: number;  // yaratilgan vaqt (optional)
-};
-
-export const Mcontext = createContext<MenuContextType | undefined>(undefined);
+export const Mcontext = createContext<MenuContextType | undefined>(undefined)
 
 const MProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [header, setHeader] = useState('');
-  const [currentUser, setCurrentUser] = useState('null');
+  const [isOpen, setIsOpen] = useState(false)
+  // const [isSideBar, setIsSidebar] = useState(false)
+  const [header, setHeader] = useState('')
 
-  const {userAll} = useApi()
-  // console.log(userAll);
-  
-  const toggleMenu = () => setIsOpen((prev) => !prev);
-  const setHeaderTitle = (title: string) => setHeader(title);
+  const toggleMenu = () => setIsOpen((prev) => !prev)
+  const setHeaderTitle = (title: string) => setHeader(title)
 
-//   // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// function getUserIdFromToken(token: string): string | null {
-//   try {
-//     const decoded = jwtDecode<MyToken>(token);
-//     return decoded.userId; // backend tokenni qanday chiqarganiga bog‘liq
-//   } catch (error) {
-//     console.error("Token xato:", error);
-//     return null;
-//   }
-// }
-
-// localStorage.clear()
-
-
-
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-async function login(username: string, password: string) {
-  const formData = new FormData();
-  formData.append("username", username);
-  formData.append("password", password);
-  try {
-    const response = await axios.post(
-      "https://fast-simple-crm.onrender.com/api/v1/auth/login",
-      formData,
-      { headers: { "Content-Type": "multipart/form-data" } }
-    );
-    // console.log(response);
-    // console.log(response.data.access_token);
-    const token = response.data.access_token;
-    // const decoded = jwtDecode<MyToken>(response.data.access_token);
-    // console.log(decoded);    
-    
-    // // const token = response.data.access_token;
-    // console.log(token);
-    
-    localStorage.setItem("token", token);
-
-    return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.error("Status:", error.response?.status);
-      console.error("Detail:", error.response?.data);
-      console.log(error);
-      
-      throw new Error(error.response?.data?.detail ?? "Login failed");
+  // ✅ register
+  async function register(
+    email: string,
+    password: string,
+    name: string,
+    username: string,
+    stir: string,
+    phone: string
+  ): Promise<void> {
+    try {
+      const res = await axiosInstance.post('https://fast-simple-crm.onrender.com/api/v1/auth/register', {
+        email, password, name, username, stir, phone
+      })
+      console.log('✅ Ro‘yxatdan o‘tdi:', res.data)
+      return res.data
+    } catch (error) {
+      console.error('❌ Register xatosi:', error)
+      throw error
     }
   }
-}
 
+  // ✅ login
+  const login = async (username: string, password: string) => {
+    try {
+      const res = await axiosInstance.post(
+        'https://fast-simple-crm.onrender.com/api/v1/auth/login',
+        new URLSearchParams({ username, password }),
+        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+      );
 
+      console.log('✅ Login muvaffaqiyatli:', res.data);
+      localStorage.setItem("token", res.data.access_token);
+      localStorage.setItem("refreshToken", res.data.refresh_token);
 
+      // har safar requestda token yuborilishi uchun
+      axiosInstance.defaults.headers.common[
+        "Authorization"
+      ] = `Bearer ${res.data.access_token}`;
 
-  const register = async (email: string, password: string, fullname: string, username: string)=>{
-    const user = {
-      email: email,
-      password: password,
-      full_name: fullname,
-      username: username
+      return res.data;
+    } catch (error) {
+      console.error('❌ Login xatosi:', error);
+      throw error;
     }
+  };
 
-    const response = await axios.post("https://fast-simple-crm.onrender.com/api/v1/auth/register", user);
-    // console.log(response.data);
+  const [bg, setBg] = useState('bg-[#013d8ce6]')
+  const [bg2, setBg2] = useState('bg-[#013d8c]')
+  const [mainBg, setMainBg] = useState('bg-white')
+  const [txt, setTxt] = useState('text-blue-100')
 
-    return response.data
+  const getTheme = (bg:string, txt:string, bg2:string, mainBg:string) => {
+    setBg(bg)
+    setBg2(bg2)
+    setMainBg(mainBg)
+    setTxt(txt)
   }
-const addCustomer = async (
-  name: string,
-  phone: string,
-  about: string
-) => {
-  const token = localStorage.getItem("token");
-  // const user_id = localStorage.getItem("user_id");
-
-  if (!token) throw new Error("No token found, please login first");
-  // if (!user_id) throw new Error("No user id found, please login first");
-
-  const customer = { name, phone, about };
-
-  const response = await axios.post(
-    "https://fast-simple-crm.onrender.com/api/v1/customers",
-    customer,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  // console.log(response);
-  
-  return response.data;
-};
-
-
-
-  // useEffect(() => {
-  //   console.log('Header changed:', header);
-  // }, [header]);
 
   return (
     <Mcontext.Provider
       value={{
-        isOpen,
-        toggleMenu,
         setHeaderTitle,
+        toggleMenu,
+        isOpen,
         header,
-        login,
         register,
-        addCustomer,
-        currentUser,
-        setCurrentUser,
+        login,
+        bg,
+        bg2,
+        txt,
+        mainBg,
+        getTheme
       }}
     >
       {children}
     </Mcontext.Provider>
-  );
-};
+  )
+}
 
 export const useM = () => {
-  const ctx = useContext(Mcontext);
-  if (!ctx) throw new Error('useM faqat MProvider ichida ishlatiladi');
-  return ctx;
-};
+  const ctx = useContext(Mcontext)
+  if (!ctx) throw new Error('useM faqat MProvider ichida ishlatiladi')
+  return ctx
+}
 
-export default MProvider;
+export default MProvider

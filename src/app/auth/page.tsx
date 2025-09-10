@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useM } from '../context'
 import axios from 'axios'
+import { MdDangerous } from 'react-icons/md'
 interface User {
   id: number;
   username: string;
@@ -15,6 +16,8 @@ const Auth: React.FC = () => {
   const [email, setEmail] = useState('')
   const [fullname, setFullname] = useState('')
   const [username, setUsername] = useState('')
+  const [stir, setStir] = useState('')
+  const [phone, setPhone] = useState('')
 
   // Contextdan keladigan login funksiyasini nomini o'zgartirdik
   const { login, register} = useM()
@@ -40,27 +43,24 @@ const Auth: React.FC = () => {
 };
 
   const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault()
-    try {
-        const userData = await register(email, password, fullname, username);
-        console.log("User info:", userData);
-        alert("Success");
-        setIsForm(false)
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          alert(err.message); 
-          console.log(err);
-          
-        } else {
-          alert(String(err));
-          console.log(err);
-        }
-}
+  e.preventDefault()
+  try {
+    const userData = await register(email, password, fullname, username, stir, phone) // ✅ tartib to‘g‘rilandi
+    console.log("User info:", userData)
+    alert("Success")
+    setIsForm(false)
+    setIsForm(true)
+  } catch (err) {
+    alert(err || "Xatolik yuz berdi")
+    console.log(err)
   }
+}
+
 
 
 
   const [isForm, setIsForm] = useState(false)
+  const [isVerify, setIsVerify] = useState(false)
 
   
 
@@ -128,6 +128,26 @@ const Auth: React.FC = () => {
                 />
               </label>
               <label className='flex gap-2.5 flex-col w-2/5 text-lg'>
+                Phone
+                <input
+                  type="text"
+                  placeholder='...'
+                  className='border border-blue-800 py-2 px-2.5 outline-0 hover:bg-blue-200 cursor-pointer rounded'
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </label>
+              <label className='flex gap-2.5 flex-col w-2/5 text-lg'>
+                STIR
+                <input
+                  type="text"
+                  placeholder='...'
+                  className='border border-blue-800 py-2 px-2.5 outline-0 hover:bg-blue-200 cursor-pointer rounded'
+                  value={stir}
+                  onChange={(e) => setStir(e.target.value)}
+                />
+              </label>
+              <label className='flex gap-2.5 flex-col w-2/5 text-lg'>
                 Email
                 <input
                   type="text"
@@ -154,6 +174,11 @@ const Auth: React.FC = () => {
                 Register
               </button>
               <button type='button' onClick={()=>setIsForm(false)}>Login</button>
+            </form>
+            <form className={`w-full ${isVerify ? "flex" : "hidden"} flex-col gap-5 items-center`}>
+              <p>
+                <MdDangerous /> Elektron pochtangizga link yuborildi!
+              </p>
             </form>
           </div>
         </div>

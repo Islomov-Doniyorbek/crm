@@ -3,105 +3,107 @@ import React, { useState } from 'react'
 import Image from 'next/image'
 import Logo from '../../public/logo.jpg'
 import { FaArrowRight, FaNewspaper, FaPlus, FaSearch, FaUserCircle } from 'react-icons/fa'
-import { MdClose, MdMenu } from 'react-icons/md'
+import { MdClose, MdMenu, MdSettings } from 'react-icons/md'
 import { useM } from '@/app/context'
-import { FaUserGroup } from 'react-icons/fa6'
-import CustomerForm from './customerForm'
-import DealForm from './dealForm'
 
 const Header: React.FC = () => {
-  const { header, toggleMenu } = useM()
+  const { header } = useM()
   const [isOpenProfile, setIsOpenProfile] = useState(false)
   const [addNewBtn, setAddNewBtn] = useState(false)
   const [addNewCustomer, setAddNewCustomer] = useState(false)
   const [addNewDeal, setAddNewDeal] = useState(false)
 
 
+  const clrMode = [
+    {
+      id: 0,
+      bg: "bg-[#013d8ce6]",
+      bg2: "bg-[#013d8c]",
+      txt: "text-blue-100",
+      mainBg: "bg-white",
+      modeName: "Standart"
+    },
+    {
+      id: 1,
+      bg: "bg-indigo-600",
+      bg2: "bg-indigo-500",
+      txt: "text-rose-100",
+      mainBg: "bg-white",
+      modeName: "Indigo"
+    },
+    {
+      id: 2,
+      bg: "bg-blue-600",
+      bg2: "bg-blue-500",
+      txt: "text-sky-100",
+      mainBg: "bg-white",
+      modeName: "Blue"
+    },
+    {
+      id: 3,
+      bg: "bg-black",
+      bg2: "bg-gray-900",
+      txt: "text-rose-700",
+      mainBg: "bg-white",
+      modeName: "Negative"
+    },
+    {
+      id: 4,
+      bg: "bg-green-800",
+      bg2: "bg-[#009826]",
+      txt: "text-black",
+      mainBg: "bg-white",
+      modeName: "Excel"
+    },
+    {
+      id: 5,
+      bg: "bg-rose-950",
+      bg2: "bg-rose-900",
+      txt: "text-rose-100",
+      mainBg: "bg-white",
+      modeName: "Crimson"
+    },
+    {
+      id: 6,
+      bg: "bg-blue-950",
+      bg2: "bg-[#181818]",
+      txt: "text-blue-50",
+      mainBg: "bg-[#1f1f1f]",
+      modeName: "Dark"
+    },
+  ]
 
+  const [isOpenClrList, setIsOpenClrList] = useState(false)
+
+  const {toggleMenu, bg, txt, getTheme} = useM()
 
   return (
-    <header className="w-full border-b">
-      <div className="grid grid-cols-12 gap-2.5">
-        {/* Logo */}
-        <div className="hidden lg:flex items-center justify-center col-span-1 py-3 px-4 border-r">
-          <Image width={60} className="rounded-full" src={Logo} alt="Logo" />
+    <header className={`w-full ${bg}`}>
+      <div className="flex py-3 justify-between">
+        <div className="flex items-center gap-4 px-2 w-40 ">
+          <MdMenu onClick={()=>toggleMenu()} className={`block lg:hidden text-4xl ${txt}`} />
+          <Image src={Logo} alt="logo" width={40} className='rounded-full' />
+          <span className={`text-xl font-semibold font-[cursive] ${txt}`}>Life ES</span>
         </div>
-
-        {/* Title */}
-        <div className="flex items-center col-span-9 lg:col-span-8 py-3 px-4">
-          <button onClick={toggleMenu} className="lg:hidden text-2xl">
-            <MdMenu />
-          </button>
-          <h2 className="ml-6 text-2xl font-bold">{header}</h2>
+        <div className={`flex relative justify-end items-center gap-4 px-2 w-40 ${txt} `}>
+          <MdSettings onClick={()=>setIsOpenClrList(prev=>!prev)} className='text-4xl cursor-pointer font-semibold font-[cursive] hover:text-yellow-400 hover:drop-shadow-[0_0_6px_rgb(255,255,0)]' />
+          <FaUserCircle className='text-4xl cursor-pointer font-semibold font-[cursive] hover:text-yellow-400 hover:drop-shadow-[0_0_6px_rgb(255,255,0)]' />
+          <ul className={`${isOpenClrList ? "block" : "hidden"} top-1 bg-blue-50 text-blue-950 pt-1.5 w-40 absolute`}>
+            <li className='flex gap-2.5 items-center py-1.5 px-2' onClick={()=>setIsOpenClrList(prev=>!prev)}>
+              <MdClose className='cursor-pointer'/> Tizim mavzusi
+            </li>
+             {clrMode.map(clr=>{
+              return (
+                <li onClick={()=>{
+                  getTheme(clr.bg, clr.txt, clr.bg2, clr.mainBg);
+                  setIsOpenClrList(prev=>!prev)
+                }} className={`text-white ${bg} border-b py-1.5 px-2 cursor-pointer flex items-center gap-2.5`} key={clr.id}>
+                  <div className={`w-3 h-3 rounded-full ${clr.bg}`}></div>
+                  {clr.modeName}</li>
+              )
+             })} 
+          </ul>
         </div>
-
-        {/* Actions & Profile */}
-        <div className="relative col-span-3 flex items-center justify-end bg-[#EEF6FBE5] py-3 px-4">
-          <div
-            className={`absolute md:relative flex flex-col md:flex-row items-center gap-6 transition-all duration-300 ease-in-out
-              ${isOpenProfile
-                ? "max-h-96 translate-y-[100px] py-4 px-4 bg-amber-50 z-40"
-                : "max-h-0 -translate-y-52"
-              }
-              md:max-h-none md:translate-y-0 md:py-0 md:px-0 md:bg-transparent
-            `}
-          >
-            {/* Close (mobile only) */}
-            <button
-              onClick={() => setIsOpenProfile(false)}
-              className="md:hidden text-3xl text-[#514ef3]"
-            >
-              <MdClose />
-            </button>
-
-            {/* Add new */}
-            <button onClick={() => setAddNewBtn(prev=>!prev)} className="flex items-center justify-center gap-2 rounded-full lg:rounded-3xl bg-[#514ef3] text-white px-2 w-8 h-8 lg:w-auto lg:px-6 lg:py-2">
-              <span className="hidden lg:block">Add new</span>
-              <FaPlus />
-            </button>
-
-            {/* Search */}
-            <button className="flex items-center justify-center w-14 h-14 rounded-full bg-white">
-              <FaSearch />
-            </button>
-
-            {/* Profile */}
-            <div className="w-14 h-14 rounded-full overflow-hidden cursor-pointer">
-              <Image className="rounded-full" src={Logo} alt="Profile" />
-            </div>
-          </div>
-
-          {/* Open Profile (mobile only) */}
-          <button
-            onClick={() => setIsOpenProfile(true)}
-            className="md:hidden text-3xl text-[#514ef3]"
-          >
-            <FaUserCircle />
-          </button>
-        </div> 
-
-        <div className={`addNewBox ${addNewBtn ? "block" : "hidden"} w-44 absolute top-5 right-5 bg-blue-800 z-40  border border-zinc-900 rounded-2xl`}>
-          <div className="addDeals flex justify-between text-amber-50 font-light py-2 items-center gap-2.5 px-4">
-            <p className='flex items-center gap-2.5'>Add New</p>
-            <MdClose onClick={()=>setAddNewBtn(false)}/>
-          </div>
-          <div onClick={()=>{
-            setAddNewDeal(true);
-            setAddNewBtn(false)
-          }} className="addDeals flex justify-between cursor-pointer text-amber-50 font-light py-2 items-center gap-2.5 border-t border-b px-4">
-            <p className='flex items-center gap-2.5'><FaNewspaper/> Deals</p>
-            <FaArrowRight/>
-          </div>
-          <div onClick={()=>{
-            setAddNewCustomer(true);
-            setAddNewBtn(false)
-          }} className="flex justify-between cursor-pointer text-amber-50 font-light py-2 items-center gap-2.5 px-4">
-            <p className='flex items-center gap-2.5'><FaUserGroup/> Customers</p>
-            <FaArrowRight/>
-          </div>
-        </div>
-        <CustomerForm open={addNewCustomer} closed={()=>setAddNewCustomer(false)} />
-        <DealForm open={addNewDeal} closed={()=>setAddNewDeal(false)} />
       </div>
     </header>
   )
