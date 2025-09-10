@@ -53,9 +53,9 @@ interface Product {
 
 interface ContractWithStatus {
   id: number;
-  contract_report: {
-    total: number;
-  };
+  total: number;
+  total_debit: number;
+  total_credit: number;
 }
 
 const Import = () => {
@@ -707,316 +707,89 @@ const Import = () => {
                               </td>
                             </tr>
             
-                            {rows.length > 0 ? (
-                              rows.map((row) => (
-                                <React.Fragment key={row.id}>
-                                  <tr >
-                                    <td className="px-3 py-2 font-medium text-gray-600">{row.id}</td>
-                                    <td className="px-3 py-2 flex items-center gap-2">
-                                      <div className={`
-                                        ${rowsWithStatus.find((x) => x.id === row.id)?.total > 0 ? "bg-green-700 drop-shadow-[0_0_6px_rgba(0,255,0,0.8)]" : (
-                                          rowsWithStatus.find((x) => x.id === row.id)?.total < 0 ? "bg-red-700 drop-shadow-[0_0_6px_rgba(255,0,0,0.8)]" : "bg-stone-700 drop-shadow-[0_0_6px_rgba(72,72,72,0.8)]"
-                                        )} w-[10px] h-[10px] rounded-[50%] 
-                                        `}>
-                                      </div>
-                                      <p>
-                                        <span>{row.korxona}</span> <br />
-                                        <small>{row.stir}</small>
-                                      </p>
-                                    </td>
-                                    <td className="px-3 py-2">{row.sana}</td>
-                                    <td className="px-3 py-2">{row.raqam}</td>
-                                    <td className="px-3 py-2">{row.shartnoma}</td>
-                                    <td className="px-3 py-2">
-                                      <div className="st inline-block mx-2">
-                                        <b>Debitor</b> <br />
-                                        <strong className='text-green-600'>{rowsWithStatus.find((x) => x.id === row.id)?.total > 0 ? rowsWithStatus.find((x) => x.id === row.id)?.total : 0}</strong>
-                                      </div>
-                                      <div className="st inline-block mx-2">
-                                        <b>Kreditor</b> <br />
-                                        <strong className='text-red-600'>{rowsWithStatus.find((x) => x.id === row.id)?.total < 0 ? (Math.abs(rowsWithStatus.find((x) => x.id === row.id)?.total)) : 0}</strong>
-                                      </div>
-                                    </td>
-                                    <td className="flex py-2 justify-center gap-2 items-center">
-                                      <button
-                                        onClick={() => {
-                                          toggleRow(row.id, row.type);
-                                          getCalc(row.id);
-                                          setSelectedContract(row.id);
-                                        }}
-                                        className="p-2 bg-emerald-200 hover:bg-emerald-400 transition rounded-full"
-                                      >
-                                        <MdAddToQueue />
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          startEditRow(row.id, "MAIN");
-                                          setIsOpen(true);
-                                        }}
-                                        className="p-2 bg-yellow-200 hover:bg-yellow-400 transition rounded-full"
-                                      >
-                                        <FaEdit />
-                                      </button>
-                                      <button
-                                        onClick={() => removeRow(row.id)}
-                                        className="p-2 bg-red-200 hover:bg-red-400 transition rounded-full"
-                                      >
-                                        <MdClose />
-                                      </button>
-                                    </td>
-                                  </tr>
-            
-                                  {/* Ichki jadval */}
-                                  {openRow === row.id && (
-                                    <tr>
-                                      <td colSpan={8}>
-                                        <table className="w-full border mt-2 rounded-lg overflow-hidden">
-                                          <thead className={`${bg2} uppercase tracking-wide`}>
-                                            <tr>
-                                              <th className="px-3 py-2 text-left">Tr</th>
-                                              <th className="px-3 py-2 text-left">Sana</th>
-                                              <th className="px-3 py-2 text-left">Turi</th>
-                                              <th className="px-3 py-2 text-left">Izoh</th>
-                                              <th className="px-3 py-2 text-left">Mahsulot</th>
-                                              <th className="px-3 py-2 text-left">Miqdor</th>
-                                              <th className="px-3 py-2 text-left">Narx</th>
-                                              <th className="px-3 py-2 text-left">Debit</th>
-                                              <th colSpan={2} className="px-3 py-2 text-left"></th>
-                                              <th colSpan={2} className="px-3 py-2 text-left">Kredit</th>
-                                              <th className="px-3 py-2 text-left"></th>
-                                              <th className="px-3 py-2 flex gap-3 items-center">
-                                                <button onClick={()=>setIsInOpen(prev=>!prev)} className="p-2 bg-emerald-500 hover:bg-emerald-600 transition text-white rounded-full shadow">
-                                                  <FaPlusCircle />
-                                                </button>
-                                              </th>
-                                            </tr>
-                                          </thead>
-            
-                                          <tbody className={`divide-y divide-gray-200 ${mainBg==="bg-gray-950" ? "text-white" : "text-black"} `}>
-                                            {/* Form Row ichki jadvalda */}
-                                            <tr className={`${isInOpen ? "table-row" : "hidden"}`}>
-                                              <td className="px-3 py-2 text-gray-500">#</td>
-                                              <td>
-                                                <input
-                                                  className="w-11/12 border rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-400 outline-none"
-                                                  type="date"
-                                                  name="date"
-                                                  value={inForm.date}
-                                                  onChange={handleInChange}
-                                                />
-                                              </td>
-                                              <td>
-                                                <select
-                                                  name="movement_type"
-                                                  value={inForm.movement_type}
-                                                  onChange={handleInChange}
-                                                  className="border rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-400 outline-none"
-                                                >
-                                                  <option value="out">To`lov</option>
-                                                  <option value="in">Mahsulot</option>
-                                                </select>
-                                              </td>
-                                              <td>
-                                                <input
-                                                  className="w-full border rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-400 outline-none"
-                                                  name="comment"
-                                                  value={inForm.comment}
-                                                  onChange={handleInChange}
-                                                  placeholder="Izoh"
-                                                />
-                                              </td>
-                                              <td>
-                                                {inForm.movement_type === "in" ? (
-                                                  <select
-                                                    className="border rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-400 outline-none w-11/12"
-                                                    value={selectedProduct || ""}
-                                                    onChange={(e) => {
-                                                      setSelectedProduct(Number(e.target.value));
-                                                    }}
-                                                  >
-                                                    <option value="">Mahsulot tanlang</option>
-                                                    {products.map((p) => (
-                                                      <option key={p.id} value={p.id}>
-                                                        {p.name} (SKU: {p.sku}) {p.price}
-                                                      </option>
-                                                    ))}
-                                                  </select>
-                                                ) : (
-                                                  <span className="text-gray-400 italic">
-                                                    To`lovda mahsulot tanlanmaydi
-                                                  </span>
-                                                )}
-                                              </td>
-                                              <td>
-                                                <input
-                                                  type="number"
-                                                  min={0}
-                                                  name="quantity"
-                                                  value={inForm.quantity}
-                                                  onChange={handleInChange}
-                                                  disabled={inForm.movement_type !== "in"}
-                                                  className={`w-11/12 border rounded-lg px-2 py-1 ${
-                                                    inForm.movement_type !== "in"
-                                                      ? "bg-gray-100 text-gray-400"
-                                                      : "focus:ring-emerald-400"
-                                                  }`}
-                                                  placeholder={
-                                                    inForm.movement_type === "in"
-                                                      ? "Mahsulot soni"
-                                                      : "To'lovda son kiritilmaydi"
-                                                  }
-                                                />
-                                              </td>
-                                              <td>
-                                                <input
-                                                  type="number"
-                                                  min={0}
-                                                  className="w-11/12 border rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-400 outline-none"
-                                                  name="price"
-                                                  value={inForm.price}
-                                                  onChange={handleInChange}
-                                                  placeholder="Narx"
-                                                />
-                                              </td>
-                                              <td colSpan={4}>-</td>
-                                              <td></td>
-                                              <td></td>
-                                              <td className="flex items-center justify-center gap-2">
-                                                <button
-                                                  onClick={addInRow}
-                                                  className="px-3 py-1 bg-emerald-500 hover:bg-emerald-600 transition text-white rounded shadow"
-                                                >
-                                                  +
-                                                </button>
-                                                <button
-                                                  onClick={() => {
-                                                    setIsInOpen(prev=>!prev)
-                                                    setInForm({
-                                                      date: "",
-                                                      movement_type: "in",
-                                                      quantity: 0,
-                                                      price: 0,
-                                                      comment: "",
-                                                      amount: "0",
-                                                    });
-                                                    setSelectedProduct(null);
-                                                  }}
-                                                  className="p-2 bg-red-200 hover:bg-red-400 transition rounded-full text-gray-700"
-                                                >
-                                                  <MdClose />
-                                                </button>
-                                              </td>
-                                            </tr>
-            
-                                            {/* Sales rows */}
-                                            {sales.length > 0 ? (
-                                              sales.map((item, index) => (
-                                              <tr
-                                                key={`${item.id}-${index}`}
-                                                
-                                              >
-                                                <td className="px-3 py-2">{index + 1}</td>
-                                                <td className="px-3 py-2">{item.date}</td>
-                                                <td className="px-3 py-2 font-semibold">
-                                                  {item.movement_type === "in"
-                                                    ? "Mahsulot"
-                                                    : "To'lov"}
-                                                </td>
-                                                <td className="px-3 py-2">{item.comment}</td>
-                                                <td className="px-3 py-2 font-semibold">
-                                                  {item.movement_type === "in"
-                                                    ? (item as any).product_name || "Noma'lum mahsulot"
-                                                    : "-"}
-                                                </td>
-                                                <td
-                                                  className={`px-3 py-2 ${
-                                                    !item.quantity ? "bg-gray-200 text-gray-400 italic" : ""
-                                                  }`}
-                                                >
-                                                  {item.quantity || "-"}
-                                                </td>
-                                                <td className="px-3 py-2 font-medium">{item.price}</td>
-                                                <td colSpan={2} className="px-3 py-2 font-medium">
-                                                  {item.movement_type === "in" && item.quantity
-                                                    ? `${(
-                                                        Number(item.price) * Number(item.quantity)
-                                                      )
-                                                        .toLocaleString("uz-UZ")
-                                                        .replace(/,/g, " ")}`
-                                                    : ""}
-                                                </td>
-                                                <td></td>
-                                                <td colSpan={2} className="px-3 py-2 font-medium">
-                                                  {item.movement_type === "out"
-                                                    ? `${Number(item.price)
-                                                        .toLocaleString("uz-UZ")
-                                                        .replace(/,/g, " ")}`
-                                                    : ""}
-                                                </td>
-                                                <td></td>
-                                                <td className="px-3 py-2 flex gap-3 items-center">
-                                                  <button className="p-1 bg-yellow-200 hover:bg-yellow-400 rounded">
-                                                    ✏️
-                                                  </button>
-                                                  <button
-                                                    onClick={() =>
-                                                      deleteItem(item.id, item.movement_type)
-                                                    }
-                                                    className="p-1 bg-red-200 hover:bg-red-400 rounded"
-                                                  >
-                                                    🗑️
-                                                  </button>
-                                                </td>
-                                              </tr>
-                                            ))
-                                            ) : (
-                                              <tr>
-                                                <td colSpan={12} className='text-center'>Ushbu bitim bilan aylanmalar mavjud emas!</td>
-                                              </tr>
-                                            )}
-            
-                                            {/* Totals */}
-                                            {
-                                              sales.length > 0 ? (
-                                                <tr className="font-semibold">
-                                              <td colSpan={7} className="text-right"></td>
+                           {rows.length > 0 ? (
+                          rows.map((row) => {
+                            const status = rowsWithStatus.find((x) => x.id === row.id) ?? {
+                              total: 0,
+                              total_debit: 0,
+                              total_credit: 0,
+                            };
+
+                            const circleClass =
+                              status.total > 0
+                                ? "bg-green-700 drop-shadow-[0_0_6px_rgba(0,255,0,0.8)]"
+                                : status.total < 0
+                                ? "bg-red-700 drop-shadow-[0_0_6px_rgba(255,0,0,0.8)]"
+                                : "bg-stone-700 drop-shadow-[0_0_6px_rgba(72,72,72,0.8)]";
+
+                            const formatNumber = (num: number) =>
+                              num.toLocaleString("uz-UZ").replace(/,/g, " ");
+
+                            return (
+                              <React.Fragment key={row.id}>
+                                <tr>
+                                  <td className="px-3 py-2 font-medium text-gray-600">{row.id}</td>
+                                  <td className="px-3 py-2 flex items-center gap-2">
+                                    <div className={`${circleClass} w-[10px] h-[10px] rounded-full`} />
+                                    <p>
+                                      <span>{row.korxona}</span> <br />
+                                      <small>{row.stir}</small>
+                                    </p>
+                                  </td>
+                                  <td className="px-3 py-2">{row.sana}</td>
+                                  <td className="px-3 py-2">{row.raqam}</td>
+                                  <td className="px-3 py-2">{row.shartnoma}</td>
+                                  <td className="px-3 py-2">
+                                    <div className="st inline-block mx-2">
+                                      <b>Debitor</b> <br />
+                                      <strong className="text-green-600">
+                                        {status.total > 0 ? status.total : 0}
+                                      </strong>
+                                    </div>
+                                    <div className="st inline-block mx-2">
+                                      <b>Kreditor</b> <br />
+                                      <strong className="text-red-600">
+                                        {status.total < 0 ? Math.abs(status.total) : 0}
+                                      </strong>
+                                    </div>
+                                  </td>
+                                </tr>
+
+                                {/* Totals */}
+                                {openRow === row.id && (
+                                  <tr>
+                                    <td colSpan={8}>
+                                      <table className="w-full border mt-2 rounded-lg overflow-hidden">
+                                        <tbody>
+                                          {sales.length > 0 && (
+                                            <tr className="font-semibold">
+                                              <td colSpan={7}></td>
                                               <td colSpan={2} className="px-3 py-2 text-center text-[12px]">
                                                 <b>Jami debit</b> <br />
-                                                <strong>
-                                                  {rowsWithStatus.find((x) => x.id === row.id)?.total_debit
-                                                    .toLocaleString("uz-UZ")
-                                                    .replace(/,/g, " ")}{" "}
-                                                  so`m
-                                                </strong>
+                                                <strong>{formatNumber(status.total_debit)} so`m</strong>
                                               </td>
                                               <td colSpan={2} className="px-3 py-2 text-center text-[12px]">
-                                                <b>Jami kredit</b>
-                                                <br />
-                                                <strong>
-                                                  {rowsWithStatus.find((x) => x.id === row.id)?.total_credit
-                                                    .toLocaleString("uz-UZ")
-                                                    .replace(/,/g, " ")}{" "}
-                                                  so`m
-                                                </strong>
+                                                <b>Jami kredit</b> <br />
+                                                <strong>{formatNumber(status.total_credit)} so`m</strong>
                                               </td>
-                                              <td colSpan={1}></td>
                                             </tr>
-                                              ) : null
-                                            }
-                                          </tbody>
-                                        </table>
-                                      </td>
-                                    </tr>
-                                  )}
-                                </React.Fragment>
-                              ))
-                            ) : (
-                              <tr>
-                                <td colSpan={8} className="bg-stone-200 text-center py-4">
-                                  Bitimlar mavjud emas
-                                </td>
-                              </tr>
-                            )}
+                                          )}
+                                        </tbody>
+                                      </table>
+                                    </td>
+                                  </tr>
+                                )}
+                              </React.Fragment>
+                            );
+                          })
+                        ) : (
+                          <tr>
+                            <td colSpan={8} className="bg-stone-200 text-center py-4">
+                              Bitimlar mavjud emas
+                            </td>
+                          </tr>
+                        )}
+
                           </tbody>
                         </table>
           </div>
