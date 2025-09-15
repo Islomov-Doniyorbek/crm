@@ -1,4 +1,4 @@
-import axios, { InternalAxiosRequestConfig } from "axios";
+import axios, { InternalAxiosRequestConfig, AxiosError } from "axios";
 import { refreshAccessToken } from "./api";
 
 let isRefreshing = false;
@@ -7,6 +7,11 @@ let subscribers: ((token: string) => void)[] = [];
 const api = axios.create({
   baseURL: "https://fast-simple-crm.onrender.com/api/v1",
 });
+
+// 🔑 Custom config turi (_retry qo‘shib)
+interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
 
 // Tokenni subscribe qilish
 function subscribeTokenRefresh(cb: (token: string) => void) {
@@ -19,29 +24,33 @@ function onRefreshed(token: string) {
   subscribers = [];
 }
 
-// ✅ config tipini InternalAxiosRequestConfig qilib qo‘yamiz
-api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = localStorage.getItem("accessToken");
-  if (token) {
-    config.headers = config.headers || {};
-    config.headers.Authorization = `Bearer ${token}`;
+// ✅ Request interceptor
+api.interceptors.request.use((config: CustomAxiosRequestConfig) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
   return config;
 });
 
+// ✅ Response interceptor
 api.interceptors.response.use(
   (res) => res,
-  async (error) => {
-    const { config, response } = error;
+  async (error: AxiosError) => {
+    const response = error.response;
+    const originalConfig = error.config as CustomAxiosRequestConfig;
 
-    if (response?.status === 401 && !(config as any)._retry) {
+    if (response?.status === 401 && !originalConfig._retry) {
       if (!isRefreshing) {
         isRefreshing = true;
         try {
           const newToken = await refreshAccessToken();
           if (newToken) {
             localStorage.setItem("accessToken", newToken);
-            onRefreshed(newToken); // kutib turganlarni yangilash
+            onRefreshed(newToken);
           }
         } finally {
           isRefreshing = false;
@@ -50,10 +59,10 @@ api.interceptors.response.use(
 
       return new Promise((resolve) => {
         subscribeTokenRefresh((token) => {
-          (config as any)._retry = true;
-          config.headers = config.headers || {};
-          config.headers.Authorization = `Bearer ${token}`;
-          resolve(api(config));
+          originalConfig._retry = true;
+          originalConfig.headers = originalConfig.headers || {};
+          originalConfig.headers.Authorization = `Bearer ${token}`;
+          resolve(api(originalConfig));
         });
       });
     }

@@ -9,7 +9,7 @@ import api from '../auth';
 
 interface Product {
   id: number;
-  prdName: string;
+  name: string;
   sku: string;
   quantity: number;
   unit: string;
@@ -21,7 +21,7 @@ const Import = () => {
 const [form, setForm] = useState<Product>(
         {
             id: 0,
-            prdName: "",
+            name: "",
             sku: "",
             quantity: 0,
             unit: "",
@@ -45,7 +45,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const addPrd = async () => {
         try {
             const prd = {
-            name: form.prdName,
+            name: form.name,
             sku: form.sku,
             unit: form.unit,
             price: form.price,
@@ -141,7 +141,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
                      <tr className={`${isOpen ? "table-row" : "hidden"}`}>
                         <td className="px-3 py-2 text-gray-500">#</td>
-                        <td><input className="w-11/12 border rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-400 outline-none" name="prdName" type='text' value={form.prdName} onChange={handleChange} /></td>
+                        <td><input className="w-11/12 border rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-400 outline-none" name="prdName" type='text' value={form.name} onChange={handleChange} /></td>
                         <td><input className="w-11/12 border rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-400 outline-none" name="sku" type='text' value={form.sku} onChange={handleChange} /></td>
                         <td></td>
                         <td><input className="w-11/12 border rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-400 outline-none" name="unit" type='text' value={form.unit} onChange={handleChange} /></td>

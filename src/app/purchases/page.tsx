@@ -20,6 +20,7 @@ interface Contract {
 }
 
 interface ContractProduct {
+  
   id: number;
   date: string;
   movement_type: "in" | "out";
@@ -131,31 +132,33 @@ const Import = () => {
     }
   }, []);
 
-  const fetchContracts = useCallback(async () => {
-    try {
-      
-      const res = await api.get("https://fast-simple-crm.onrender.com/api/v1/contracts?type=purchase");
+const fetchContracts = useCallback(async () => {
+  try {
+    const res = await api.get<Contract[]>( // <-- bu yerda Contract[] ishlatamiz
+      "https://fast-simple-crm.onrender.com/api/v1/contracts?type=purchase"
+    );
 
-      const contracts = res.data.map((contract: any) => {
-        const cp = counterparties.find((c: any) => c.id === contract.agent_id);
+    const contracts: Contract[] = res.data.map((contract) => {
+      const cp = counterparties.find((c) => c.id === contract.agent_id);
 
-        return {
-          id: contract.id,
-          korxona: cp?.name || "Noma'lum",
-          stir: cp?.tin || "-",
-          shartnoma: contract.comment || "-",
-          sana: contract.compiled_at || "-",
-          raqam: contract.doc_num,
-          type: contract.contract_type.toUpperCase() === "PURCHASE" ? "PURCHASE" : "SALES",
-          agent_id: contract.agent_id
-        };
-      });
+      return {
+        id: contract.id,
+        korxona: cp?.name || "Noma'lum",
+        stir: cp?.tin || "-",
+        shartnoma: (contract as any).comment || "-", // agar back-endda `comment` bo‘lsa
+        sana: (contract as any).compiled_at || "-", // agar back-endda `compiled_at` bo‘lsa
+        raqam: (contract as any).doc_num,
+        type: (contract as any).contract_type.toUpperCase() === "PURCHASE" ? "PURCHASE" : "SALES",
+        agent_id: contract.agent_id
+      };
+    });
 
-      setRows(contracts);
-    } catch (error) {
-      console.error("Contracts olishda xato:", error);
-    }
-  }, [counterparties]);
+    setRows(contracts);
+  } catch (error) {
+    console.error("Contracts olishda xato:", error);
+  }
+}, [counterparties]);
+
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -334,71 +337,67 @@ const Import = () => {
       
     } catch (error) {
       console.error("Xatolik:", error);
-      alert("Xatolik yuz berdi: " + (error as any).message);
+      alert("Xatolik yuz berdi: " + error);
     }
   };
 
   const [openRow, setOpenRow] = useState<number | null>(null);
 
-  const toggleRow = async (rowId: number, type: "PURCHASE" | "SALES") => {
-    if (openRow === rowId) {
-      setOpenRow(null);
-      setSales([]);
-      return;
-    }
-    
-    setOpenRow(rowId);
-    setSelectedContract(rowId);
+ const toggleRow = async (rowId: number, type: "PURCHASE" | "SALES") => {
+  if (openRow === rowId) {
+    setOpenRow(null);
+    setSales([]);
+    return;
+  }
 
-    try {
-      
-      const [paymentsRes, productsRes] = await Promise.all([
-        api.get(`https://fast-simple-crm.onrender.com/api/v1/contract-payments?contract_id=${rowId}`),
-        api.get(`https://fast-simple-crm.onrender.com/api/v1/contract-products?contract_id=${rowId}`),
-      ]);
+  setOpenRow(rowId);
+  setSelectedContract(rowId);
 
+  try {
+    const [paymentsRes, productsRes] = await Promise.all([
+      api.get<ContractProduct[]>(`https://fast-simple-crm.onrender.com/api/v1/contract-payments?contract_id=${rowId}`),
+      api.get<ContractProduct[]>(`https://fast-simple-crm.onrender.com/api/v1/contract-products?contract_id=${rowId}`),
+    ]);
 
-      // To'lovlarni (OUT) qayta ishlash
-      const payments = paymentsRes.data.map((p: any) => ({
-        id: p.id,
-        date: p.compiled_at,
-        movement_type: "out" as const,
-        quantity: 0,
-        price: Number(p.amount),
-        comment: p.comment || "",
-        amount: p.amount
-      }));
+    // OUT (to‘lovlar)
+    const payments: ContractProduct[] = paymentsRes.data.map((p) => ({
+      id: p.id,
+      date: (p as any).compiled_at,
+      movement_type: "out",
+      quantity: 0,
+      price: Number(p.amount),
+      comment: p.comment || "",
+      amount: p.amount
+    }));
 
-      // Mahsulotlarni (IN) qayta ishlash
-      const productsData = productsRes.data
-        .filter((p: any) => p.contract_id === rowId)
-        .map((p: any) => {
-          const product = products.find(prod => prod.id === p.product_id);
-          return {
-            id: p.id,
-            date: p.compiled_at,
-            movement_type: "in" as const,
-            quantity: p.quantity,
-            price: p.price,
-            comment: p.comment || "",
-            product_id: p.product_id,
-            product_name: product?.name || "Noma'lum mahsulot",
-            amount: "0"
-          };
-        });
+    // IN (mahsulotlar)
+    const productsData: ContractProduct[] = productsRes.data
+      .filter((p) => p.contract_id === rowId)
+      .map((p) => {
+        const product = products.find(prod => prod.id === p.product_id);
+        return {
+          id: p.id,
+          date: (p as any).compiled_at,
+          movement_type: "in",
+          quantity: p.quantity,
+          price: p.price,
+          comment: p.comment || "",
+          product_id: p.product_id,
+          product_name: product?.name || "Noma'lum mahsulot",
+          amount: "0"
+        };
+      });
 
-      // To'lovlar va mahsulotlarni birlashtirish
-      const combinedData = [...payments, ...productsData];
-      
-      // Sana bo'yicha tartiblash
-      combinedData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      
-      setSales(combinedData);
-    } catch (error) {
-      console.error("Ma'lumotlarni olishda xato:", error);
-      alert("Ma'lumotlarni yuklashda xatolik yuz berdi");
-    }
-  };
+    const combinedData = [...payments, ...productsData];
+    combinedData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    setSales(combinedData);
+  } catch (error) {
+    console.error("Ma'lumotlarni olishda xato:", error);
+    alert("Ma'lumotlarni yuklashda xatolik yuz berdi");
+  }
+};
+
 
   const removeRow = async (id: number) => {
     try {
