@@ -1,201 +1,194 @@
 'use client'
 import React, { useEffect, useState, useCallback } from 'react'
 import CustomLayout from '../customLayout'
-import { FaEdit, FaPlusCircle } from 'react-icons/fa';
-import { MdAddToQueue, MdClose } from 'react-icons/md';
-import { FaCirclePlus } from 'react-icons/fa6';
-import axios from 'axios';
-import { useM } from '../context';
-import api from '../auth';
+import { FaEdit, FaPlusCircle } from 'react-icons/fa'
+import { MdAddToQueue, MdClose } from 'react-icons/md'
+import { FaCirclePlus } from 'react-icons/fa6'
+import axios from 'axios'
+import { useM } from '../context'
+import api from '../auth'
 
+// Interfaces
 interface Contract {
-  id: number;
-  korxona: string;
-  stir: string;
-  shartnoma: string;
-  sana: string;
-  raqam: string;
-  type: "PURCHASE" | "SALES";
-  agent_id: number;
+  id: number
+  korxona: string
+  stir: string
+  shartnoma: string
+  sana: string
+  raqam: string
+  type: 'PURCHASE' | 'SALES'
+  agent_id: number
 }
 
 interface ContractProduct {
-  
-  id: number;
-  date: string;
-  movement_type: "in" | "out";
-  quantity: number;
-  amount: string;
-  price: number;
-  comment: string;
-  product_id?: number | null;
-  product_name?: string;
+  id: number
+  date: string
+  movement_type: 'in' | 'out'
+  quantity: number
+  amount: string
+  price: number
+  comment: string
+  product_id?: number | null
+  product_name?: string
 }
 
 interface Counterparty {
-  id: number;
-  user_id: number;
-  agent_type: string;
-  name: string;
-  tin: string;
-  phone: string;
-  description: string;
+  id: number
+  user_id: number
+  agent_type: string
+  name: string
+  tin: string
+  phone: string
+  description: string
 }
 
 interface Product {
-  id: number;
-  name: string;
-  sku: string;
-  quantity: number;
-  unit: string;
-  price: string;
-  description: string;
+  id: number
+  name: string
+  sku: string
+  quantity: number
+  unit: string
+  price: string
+  description: string
 }
 
 interface ContractWithStatus {
-  id: number;
-  total: number;
-  total_debit: number;
-  total_credit: number;
+  id: number
+  total: number
+  total_debit: number
+  total_credit: number
 }
 
 const Import = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [counterparties, setCounterparties] = useState<Counterparty[]>([]);
-  const [selectedContract, setSelectedContract] = useState<number | null>(null);
-  const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
-  const [selectedCounterparty, setSelectedCounterparty] = useState<number | null>(null);
-  const [rows, setRows] = useState<Contract[]>([]);
-  const [rowsWithStatus, setRowsWithStatus] = useState<ContractWithStatus[]>([]);
-  const [sales, setSales] = useState<ContractProduct[]>([]);
+  const [products, setProducts] = useState<Product[]>([])
+  const [counterparties, setCounterparties] = useState<Counterparty[]>([])
+  const [rows, setRows] = useState<Contract[]>([])
+  const [rowsWithStatus, setRowsWithStatus] = useState<ContractWithStatus[]>([])
+  const [sales, setSales] = useState<ContractProduct[]>([])
 
-  // Forms
-  const [form, setForm] = useState<Omit<Contract, "id">>({
-    korxona: "",
-    stir: "",
-    shartnoma: "",
-    sana: "",
-    raqam: "",
-    type: "PURCHASE",
+  const [selectedContract, setSelectedContract] = useState<number | null>(null)
+  const [selectedProduct, setSelectedProduct] = useState<number | null>(null)
+  const [selectedCounterparty, setSelectedCounterparty] = useState<number | null>(null)
+
+  const [form, setForm] = useState<Omit<Contract, 'id'>>({
+    korxona: '',
+    stir: '',
+    shartnoma: '',
+    sana: '',
+    raqam: '',
+    type: 'PURCHASE',
     agent_id: 0,
-  });
+  })
 
-  const [inForm, setInForm] = useState<Omit<ContractProduct, "id">>({
-    date: "",
-    movement_type: "out",
+  const [inForm, setInForm] = useState<Omit<ContractProduct, 'id'>>({
+    date: '',
+    movement_type: 'out',
     quantity: 0,
     price: 0,
-    comment: "",
-    amount: "0"
-  });
+    comment: '',
+    amount: '0',
+  })
+
+  // Context
+  const { bg2, txt, mainBg } = useM()
+
+  // Modal States
+  // const [isOpen, setIsOpen] = useState(false)
+  // const [isInOpen, setIsInOpen] = useState(false)
+  // // const [openRow, setOpenRow] = useState<number | null>(null)
+  // const [editId, setEditId] = useState<number | null>(null)
 
   // Handlers
-  const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    
-    if (name === "agent_id") {
-      const selectedId = Number(value);
-      const selectedCp = counterparties.find(cp => cp.id === selectedId);
-      
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    if (name === 'agent_id') {
+      const selectedId = Number(value)
+      const selectedCp = counterparties.find(cp => cp.id === selectedId)
       if (selectedCp) {
-        setForm(prev => ({ 
-          ...prev, 
+        setForm(prev => ({
+          ...prev,
           agent_id: selectedId,
           korxona: selectedCp.name,
-          stir: selectedCp.tin
-        }));
-        setSelectedCounterparty(selectedId);
+          stir: selectedCp.tin,
+        }))
+        setSelectedCounterparty(selectedId)
       }
     } else {
-      setForm(prev => ({ ...prev, [name]: value }));
+      setForm(prev => ({ ...prev, [name]: value }))
     }
-  };
+  }
 
   const handleInChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target
     setInForm(prev => ({
       ...prev,
-      [name]: name === "quantity" || name === "price" ? Number(value) : value
-    }));
-  };
+      [name]: name === 'quantity' || name === 'price' ? Number(value) : value,
+    }))
+  }
 
-  
-
-  // Ma'lumotlarni yuklash funksiyalari
+  // Fetchers
   const fetchCounterparties = useCallback(async () => {
     try {
-      
-      const res = await api.get("https://fast-simple-crm.onrender.com/api/v1/counterparties?type=supplier");
-      setCounterparties(res.data);
+      const res = await api.get('/counterparties?type=supplier')
+      setCounterparties(res.data)
     } catch (error) {
-      console.error("Counterparties olishda xato:", error);
+      console.error('Counterparties olishda xato:', error)
     }
-  }, []);
+  }, [])
 
-const fetchContracts = useCallback(async () => {
-  try {
-    const res = await api.get<Contract[]>( // <-- bu yerda Contract[] ishlatamiz
-      "https://fast-simple-crm.onrender.com/api/v1/contracts?type=purchase"
-    );
-
-    const contracts: Contract[] = res.data.map((contract) => {
-      const cp = counterparties.find((c) => c.id === contract.agent_id);
-
-      return {
-        id: contract.id,
-        korxona: cp?.name || "Noma'lum",
-        stir: cp?.tin || "-",
-        shartnoma: (contract as any).comment || "-", // agar back-endda `comment` bo‘lsa
-        sana: (contract as any).compiled_at || "-", // agar back-endda `compiled_at` bo‘lsa
-        raqam: (contract as any).doc_num,
-        type: (contract as any).contract_type.toUpperCase() === "PURCHASE" ? "PURCHASE" : "SALES",
-        agent_id: contract.agent_id
-      };
-    });
-
-    setRows(contracts);
-  } catch (error) {
-    console.error("Contracts olishda xato:", error);
-  }
-}, [counterparties]);
-
+  const fetchContracts = useCallback(async () => {
+    try {
+      const res = await api.get<Contract[]>('/contracts?type=purchase')
+      const contracts: Contract[] = res.data.map(contract => {
+        const cp = counterparties.find(c => c.id === contract.agent_id)
+        return {
+          id: contract.id,
+          korxona: cp?.name || "Noma'lum",
+          stir: cp?.tin || '-',
+          shartnoma: (contract as any).comment || '-',
+          sana: (contract as any).compiled_at || '-',
+          raqam: (contract as any).doc_num,
+          type: (contract as any).contract_type.toUpperCase() === 'PURCHASE' ? 'PURCHASE' : 'SALES',
+          agent_id: contract.agent_id,
+        }
+      })
+      setRows(contracts)
+    } catch (error) {
+      console.error('Contracts olishda xato:', error)
+    }
+  }, [counterparties])
 
   const fetchProducts = useCallback(async () => {
     try {
-      
-      const res = await api.get("https://fast-simple-crm.onrender.com/api/v1/products");
-      setProducts(res.data);
+      const res = await api.get('/products')
+      setProducts(res.data)
     } catch (err) {
-      console.error("Mahsulotlarni olishda xato:", err);
+      console.error('Mahsulotlarni olishda xato:', err)
     }
-  }, []);
+  }, [])
 
   const fetchContractStatus = useCallback(async () => {
     try {
-      const res = await api.get(`https://fast-simple-crm.onrender.com/api/v1/contracts/with-total`);
-      setRowsWithStatus(res.data);
+      const res = await api.get('/contracts/with-total')
+      setRowsWithStatus(res.data)
     } catch (error) {
-      console.error("Contract status olishda xato:", error);
+      console.error('Contract status olishda xato:', error)
     }
-  }, []);
+  }, [])
 
-  // Barcha ma'lumotlarni yuklash
   const loadAllData = useCallback(async () => {
-    await fetchCounterparties();
-    await fetchProducts();
-    await fetchContractStatus();
-  }, [fetchCounterparties, fetchProducts, fetchContractStatus]);
+    await fetchCounterparties()
+    await fetchProducts()
+    await fetchContractStatus()
+  }, [fetchCounterparties, fetchProducts, fetchContractStatus])
 
   useEffect(() => {
-    if (counterparties.length > 0) {
-      fetchContracts();
-    }
-  }, [counterparties, fetchContracts]);
+    if (counterparties.length > 0) fetchContracts()
+  }, [counterparties, fetchContracts])
 
-  
   useEffect(() => {
-    loadAllData();
-  }, [loadAllData]);
+    loadAllData()
+  }, [loadAllData])
 
   const addRow = async () => {
     if (!form.agent_id || !form.sana || !form.raqam) return alert("Korxona, sana va raqam majburiy!");
@@ -337,7 +330,7 @@ const fetchContracts = useCallback(async () => {
       
     } catch (error) {
       console.error("Xatolik:", error);
-      alert("Xatolik yuz berdi: " + error);
+      alert("Xatolik yuz berdi: " +error);
     }
   };
 
@@ -488,9 +481,6 @@ const fetchContracts = useCallback(async () => {
     }
   }
 
-  const status = rowsWithStatus.find((x) => x.id === row.id);
-const total = status?.total ?? 0;
-  const {bg2, txt, mainBg} = useM()
   return (
     <CustomLayout>
         <div className={`${mainBg} w-full px-6 py-6`}>
@@ -590,71 +580,78 @@ const total = status?.total ?? 0;
                             </tr>
             
                             {rows.length > 0 ? (
-                              rows.map((row) => (
-                                <React.Fragment key={row.id}>
-                                  <tr className="hover:bg-emerald-50 w-full align-middle transition">
-                                    <td className="px-3 py-2 font-medium text-gray-600">{row.id}</td>
-                                    <td className="px-3 py-2 flex items-center gap-2">
+  rows.map((row) => {
+    const status = rowsWithStatus.find((x) => x.id === row.id);
+    const total = status?.total ?? 0;
 
-                                    <div
-                                      className={`
-                                        ${total > 0 
-                                          ? "bg-green-700 drop-shadow-[0_0_6px_rgba(0,255,0,0.8)]" 
-                                          : total < 0 
-                                            ? "bg-red-700 drop-shadow-[0_0_6px_rgba(255,0,0,0.8)]" 
-                                            : "bg-stone-700 drop-shadow-[0_0_6px_rgba(72,72,72,0.8)]"
-                                        } w-[10px] h-[10px] rounded-[50%]
-                                      `}
-                                    ></div>
+    return (
+      <React.Fragment key={row.id}>
+        <tr className="hover:bg-emerald-50 w-full align-middle transition">
+          <td className="px-3 py-2 font-medium text-gray-600">{row.id}</td>
+          <td className="px-3 py-2 flex items-center gap-2">
+            <div
+              className={`
+                ${total > 0 
+                  ? "bg-green-700 drop-shadow-[0_0_6px_rgba(0,255,0,0.8)]" 
+                  : total < 0 
+                    ? "bg-red-700 drop-shadow-[0_0_6px_rgba(255,0,0,0.8)]" 
+                    : "bg-stone-700 drop-shadow-[0_0_6px_rgba(72,72,72,0.8)]"
+                } w-[10px] h-[10px] rounded-[50%]
+              `}
+            ></div>
+            <p>
+              <span>{row.korxona}</span> <br />
+              <small>{row.stir}</small>
+            </p>
+          </td>
+          <td className="px-3 py-2">{row.sana}</td>
+          <td className="px-3 py-2">{row.raqam}</td>
+          <td className="px-3 py-2">{row.shartnoma}</td>
+          <td className="px-3 py-2">
+            <div className="st inline-block mx-2">
+              <b>Debitor</b> <br />
+              <strong className="text-green-600">
+                {status?.total > 0 ? status.total : 0}
+              </strong>
+            </div>
+            <div className="st inline-block mx-2">
+              <b>Kreditor</b> <br />
+              <strong className="text-red-600">
+                {status?.total < 0 ? Math.abs(status.total) : 0}
+              </strong>
+            </div>
+          </td>
+          <td className="px-3 py-2 flex items-center gap-2">
+            <button
+              onClick={() => {
+                toggleRow(row.id, row.type);
+                setSelectedContract(row.id);
+              }}
+              className="p-2 bg-emerald-400 hover:bg-emerald-600 cursor-pointer transition rounded-full"
+            >
+              <MdAddToQueue />
+            </button>
+            <button
+              onClick={() => {
+                startEditRow(row.id, "MAIN");
+                setIsOpen(true);
+              }}
+              className="p-2 bg-yellow-400 hover:bg-yellow-600 cursor-pointer transition rounded-full"
+            >
+              <FaEdit />
+            </button>
+            <button
+              onClick={() => removeRow(row.id)}
+              className="p-2 bg-red-400 hover:bg-red-600 cursor-pointer transition rounded-full"
+            >
+              <MdClose />
+            </button>
+          </td>
+        </tr>
 
-                                      <p>
-                                        <span>{row.korxona}</span> <br />
-                                        <small>{row.stir}</small>
-                                      </p>
-                                    </td>
-                                    <td className="px-3 py-2">{row.sana}</td>
-                                    <td className="px-3 py-2">{row.raqam}</td>
-                                    <td className="px-3 py-2">{row.shartnoma}</td>
-                                    <td className="px-3 py-2">
-                                      <div className="st inline-block mx-2">
-                                        <b>Debitor</b> <br />
-                                        <strong className='text-green-600'>{rowsWithStatus.find((x) => x.id === row.id)?.total > 0 ? rowsWithStatus.find((x) => x.id === row.id)?.total : 0}</strong>
-                                      </div>
-                                      <div className="st inline-block mx-2">
-                                        <b>Kreditor</b> <br />
-                                        <strong className='text-red-600'>{rowsWithStatus.find((x) => x.id === row.id)?.total < 0 ? (Math.abs(rowsWithStatus.find((x) => x.id === row.id)?.total)) : 0}</strong>
-                                      </div>
-                                    </td>
-                                    <td className="px-3 py-2 flex items-center gap-2 ">
-                                      <button
-                                        onClick={() => {
-                                          toggleRow(row.id, row.type);
-                                          setSelectedContract(row.id);
-                                        }}
-                                        className="p-2 bg-emerald-400 hover:bg-emerald-600 cursor-pointer transition rounded-full"
-                                      >
-                                        <MdAddToQueue />
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          startEditRow(row.id, "MAIN");
-                                          setIsOpen(true);
-                                        }}
-                                        className="p-2 bg-yellow-400 hover:bg-yellow-600 cursor-pointer transition rounded-full"
-                                      >
-                                        <FaEdit />
-                                      </button>
-                                      <button
-                                        onClick={() => removeRow(row.id)}
-                                        className="p-2 bg-red-400 hover:bg-red-600 cursor-pointer transition rounded-full"
-                                      >
-                                        <MdClose />
-                                      </button>
-                                    </td>
-                                  </tr>
-            
-                                  {/* Ichki jadval */}
-                                  {openRow === row.id && (
+        {/* Ichki jadval */}
+        {openRow === row.id && (
+                                    
                                     <tr>
                                       <td colSpan={7}>
                                         <table className="w-full border mt-2 rounded-lg overflow-hidden">
@@ -897,15 +894,16 @@ const total = status?.total ?? 0;
                                       </td>
                                     </tr>
                                   )}
-                                </React.Fragment>
-                              ))
-                            ) : (
-                              <tr>
-                                <td colSpan={8} className="bg-stone-200 text-center py-4">
-                                  Bitimlar mavjud emas
-                                </td>
-                              </tr>
-                            )}
+      </React.Fragment>
+    );
+  })
+) : (
+  <tr>
+    <td colSpan={8} className="bg-stone-200 text-center py-4">
+      Bitimlar mavjud emas
+    </td>
+  </tr>
+)}
                           </tbody>
               </table>
           </div>
