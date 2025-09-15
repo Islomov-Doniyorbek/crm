@@ -94,6 +94,11 @@ const Page: React.FC = () => {
     }
   };
 
+  useEffect(()=>{
+    console.log(rows);
+    
+  }, [rows])
+
   const { bg2, txt, mainBg } = useM();
 
   return (
@@ -170,9 +175,9 @@ const Page: React.FC = () => {
                     <td className="px-3 py-2">{idx + 1}</td>
                     <td className="px-3 py-2 flex items-center gap-2">
                       <div className={`w-3 h-3 rounded-full ${
-                        row.status?.status > 0
+                        row.status > 0
                           ? "bg-green-600 shadow-[0_0_6px_rgba(0,255,0,0.8)]"
-                          : row.status?.status < 0
+                          : row.status < 0
                           ? "bg-red-600 shadow-[0_0_6px_rgba(255,0,0,0.8)]"
                           : "bg-stone-600 shadow-[0_0_6px_rgba(192,192,192,0.8)]"
                       }`} />
@@ -181,11 +186,11 @@ const Page: React.FC = () => {
                     <td className="px-3 py-2">{row.tin}</td>
                     <td className="px-3 py-2">{row.phone}</td>
                     <td className="px-3 py-2">{row.description}</td>
-                    <td className={`px-3 py-2 ${row.status?.status > 0 ? "text-green-600" : "text-stone-400"}`}>
-                      {row.status?.status > 0 ? row.status?.status : 0}
+                    <td className={`px-3 py-2 ${row.status > 0 ? "text-green-600" : "text-stone-400"}`}>
+                      {row.status > 0 ? row.status : 0}
                     </td>
-                    <td className={`px-3 py-2 ${row.status?.status < 0 ? "text-red-600" : "text-stone-400"}`}>
-                      {row.status?.status < 0 ? Math.abs(row.status?.status) : 0}
+                    <td className={`px-3 py-2 ${row.status < 0 ? "text-red-600" : "text-stone-400"}`}>
+                      {row.status < 0 ? Math.abs(row.status) : 0}
                     </td>
                     <td className="px-3 py-2">
                       <div className="flex justify-center gap-2">
