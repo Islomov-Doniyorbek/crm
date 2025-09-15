@@ -1,13 +1,12 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import CustomLayout from '../customLayout'
-import SideBar from '@/components/sidebar'
-import { FaCheckCircle, FaClosedCaptioning, FaEdit, FaPlusCircle } from 'react-icons/fa';
-import { MdAddToQueue, MdClose, MdCloseFullscreen, MdRemoveCircle } from 'react-icons/md';
-import { FaCircle, FaCirclePlus } from 'react-icons/fa6';
+import { FaEdit, FaPlusCircle } from 'react-icons/fa';
+import { MdAddToQueue, MdClose } from 'react-icons/md';
+import { FaCirclePlus } from 'react-icons/fa6';
 import axios from 'axios';
 import { useM } from '../context';
-import api from '../api';
+import api from '../auth';
 
 interface Contract {
   id: number;
@@ -68,7 +67,6 @@ const Import = () => {
   const [rows, setRows] = useState<Contract[]>([]);
   const [rowsWithStatus, setRowsWithStatus] = useState<ContractWithStatus[]>([]);
   const [sales, setSales] = useState<ContractProduct[]>([]);
-
   // Forms
   const [form, setForm] = useState<Omit<Contract, "id">>({
     korxona: "",
@@ -119,14 +117,13 @@ const Import = () => {
     }));
   };
 
-  const [contractId, setContractId] = useState(0);
+  
 
   const addRow = async () => {
     if (!form.agent_id || !form.sana || !form.raqam) return alert("Korxona, sana va raqam majburiy!");
     
     try {
-      const token = localStorage.getItem("token");
-
+      
       const contract = {
         agent_id: form.agent_id,
         contract_type: form.type.toLowerCase(),
@@ -134,19 +131,12 @@ const Import = () => {
         doc_num: form.raqam,
         comment: form.shartnoma
       };
-      console.log(contract);
       
 
-      const resContract = await axios.post("https://fast-simple-crm.onrender.com/api/v1/contracts",
-        contract,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const resContract = await api.post("https://fast-simple-crm.onrender.com/api/v1/contracts",
+        contract
       );
 
-      console.log("✅ Contract qo'shildi:", resContract.data);
       
       // Yangi qatorni qo'shish
       const newRow = {
@@ -197,8 +187,7 @@ const Import = () => {
     if (!selectedContract) return alert("Avval bitim tanlang!");
     
     try {
-      const token = localStorage.getItem("token");
-
+      
       if (inForm.movement_type === "in") {
         const payment = {
           contract_id: selectedContract,
@@ -208,18 +197,10 @@ const Import = () => {
           comment: inForm.comment
         };
 
-        const resContractPay = await axios.post("https://fast-simple-crm.onrender.com/api/v1/contract-payments",
-          payment,
-          {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        const resContractPay = await api.post("https://fast-simple-crm.onrender.com/api/v1/contract-payments",
+          payment
         );
-
-        console.log("To'lov qo'shildi:", resContractPay.data);
         
-        // Yangi to'lovni sales ro'yxatiga qo'shish
         const newPayment = {
           id: resContractPay.data.id,
           date: inForm.date,
@@ -245,19 +226,11 @@ const Import = () => {
           comment: inForm.comment
         };
 
-        const resContractPrd = await axios.post(
+        const resContractPrd = await api.post(
           "https://fast-simple-crm.onrender.com/api/v1/contract-products",
-          product,
-          {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+          product
         );
 
-        console.log("Mahsulot qo'shildi:", resContractPrd.data);
-        
-        // Yangi mahsulotni sales ro'yxatiga qo'shish
         const selectedProd = products.find(p => p.id === selectedProduct);
         const newProduct = {
           id: resContractPrd.data.id,
@@ -276,6 +249,7 @@ const Import = () => {
       
       // Status ma'lumotlarini yangilash
       await getStatusContract();
+      await fetchProducts()
       
       // Formani tozalash
       setInForm({ 
@@ -295,10 +269,9 @@ const Import = () => {
   };
 
   const [openRow, setOpenRow] = useState<number | null>(null);
-  const [getType, setGetType] = useState<"PURCHASE" | "SALES" | "">("");
+  
 
   const toggleRow = async (rowId: number, type: "PURCHASE" | "SALES") => {
-    // Agar bir xil qatorni yana bosa, yopish
     if (openRow === rowId) {
       setOpenRow(null);
       setSales([]);
@@ -306,30 +279,17 @@ const Import = () => {
     }
     
     setOpenRow(rowId);
-    setGetType(type);
+    
     setSelectedContract(rowId);
 
     try {
-      const token = localStorage.getItem("token");
-      
+
       const [paymentsRes, productsRes] = await Promise.all([
-        axios.get(`https://fast-simple-crm.onrender.com/api/v1/contract-payments?contract_id=${rowId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-        axios.get(`https://fast-simple-crm.onrender.com/api/v1/contract-products?contract_id=${rowId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
+        api.get(`https://fast-simple-crm.onrender.com/api/v1/contract-payments?contract_id=${rowId}`),
+        api.get(`https://fast-simple-crm.onrender.com/api/v1/contract-products?contract_id=${rowId}`),
       ], 
     );
 
-      console.log("Payments API response:", paymentsRes.data)
-      console.log("Products API response:", productsRes.data)
-
-      // To'lovlarni (IN) qayta ishlash
       const payments = paymentsRes.data.map((p: any) => ({
         id: p.id,
         date: p.compiled_at,
@@ -371,12 +331,7 @@ const Import = () => {
 
   const removeRow = async (id: number) => {
     try {
-      const token = localStorage.getItem("token");
-      await axios.delete(`https://fast-simple-crm.onrender.com/api/v1/contracts/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+      await api.delete(`https://fast-simple-crm.onrender.com/api/v1/contracts/${id}`)
       
       setRows(prev => prev.filter(row => row.id !== id));
       // Status ma'lumotlarini yangilash
@@ -402,7 +357,6 @@ const Import = () => {
   const saveEditRow = async () => {
     if (editId) {
       try {
-        const token = localStorage.getItem("token");
         const contract = {
           agent_id: form.agent_id,
           contract_type: form.type.toLowerCase(),
@@ -411,19 +365,16 @@ const Import = () => {
           comment: form.shartnoma
         };
 
-        await axios.put(
+        await api.patch(
           `https://fast-simple-crm.onrender.com/api/v1/contracts/${editId}`,
-          contract, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+          contract, 
+        
         );
 
         setRows(prev => prev.map(row => (row.id === editId ? { ...row, ...form } : row)));
         // Status ma'lumotlarini yangilash
         await getStatusContract();
-        
+        await fetchProducts()
         setEditId(null);
         setForm({ 
           korxona: "", 
@@ -446,21 +397,12 @@ const Import = () => {
 
   const getData = async () => {
     try {
-      const token = localStorage.getItem("token");
 
       const [resCounterparties, resContracts] = await Promise.all([
-        axios.get("https://fast-simple-crm.onrender.com/api/v1/counterparties?type=customer", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-        axios.get("https://fast-simple-crm.onrender.com/api/v1/contracts?type=sales", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
+        api.get("https://fast-simple-crm.onrender.com/api/v1/counterparties?type=customer"),
+        api.get("https://fast-simple-crm.onrender.com/api/v1/contracts?type=sales"),
       ]);
-
+      
       setCounterparties(resCounterparties.data);
 
       const contracts = resContracts.data.map((contract: any) => {
@@ -486,106 +428,39 @@ const Import = () => {
   };
 
   const getStatusContract = async () => {
+    const res = await api.get(`https://fast-simple-crm.onrender.com/api/v1/contracts/with-total`);
+    setRowsWithStatus(res.data);
+  }
+  const fetchProducts = async () => {
     try {
       const token = localStorage.getItem("token");
-
-      const res = await axios.get(`https://fast-simple-crm.onrender.com/api/v1/contracts/with-total`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-      console.log(res);
-      setRowsWithStatus(res.data);
-      
-    } catch (error) {
-      console.log(error);
+      const res = await api.get("https://fast-simple-crm.onrender.com/api/v1/products/with-quantity", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setProducts(res.data);
+    } catch (err) {
+      console.error("Mahsulotlarni olishda xato:", err);
     }
-  }
+  };
 
   useEffect(() => {
     getData();
     getStatusContract();
-  }, []);
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get("https://fast-simple-crm.onrender.com/api/v1/products/with-quantity", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setProducts(res.data);
-      } catch (err) {
-        console.error("Mahsulotlarni olishda xato:", err);
-      }
-    };
-
     fetchProducts();
   }, []);
 
-  const [diff, setDiff] = useState(0);
+
   
-  useEffect(() => {
-    let calc = 0;
-    
-    sales.forEach((item) => {
-      if (item.movement_type === "out") {
-        // Mahsulot chiqimi - summani qo'shamiz
-        calc += item.price * item.quantity;
-      } else if (item.movement_type === "in") {
-        // To'lov kirimi - summani ayiramiz
-        calc -= item.price;
-      }
-    });
-    
-    setDiff(calc);
-  }, [sales]);
 
-  const [debitTotal, setDebitTotal] = useState<number>(0)
-  const [kreditTotal, setKreditTotal] = useState<number>(0)
-  const [total, setTotal] = useState<number>(0)
-     
-  const getCalc = async (id:number) => {
-    console.log(id);
-    try {
-      const token = localStorage.getItem("token");
-
-      const res = await axios.get(`https://fast-simple-crm.onrender.com/api/v1/contracts/${id}/with-total`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-      console.log(res);
-      // console.log(res.data.debit);
-      // console.log(res.data.credit);
-      setDebitTotal(res.data.total_debit)
-      setKreditTotal(res.data.total_credit)
-      setTotal(res.data.total)
-      
-    } catch(error) {
-      console.log(error);
-    }
-  }
 
   async function deleteItem(id:number, type: "in" | "out") {
     try {
-      const token = localStorage.getItem("token");
-
       if(type === "in") {
-        await axios.delete(`https://fast-simple-crm.onrender.com/api/v1/contract-payments/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        await api.delete(`https://fast-simple-crm.onrender.com/api/v1/contract-payments/${id}`);
       } else if(type === "out") {
-        await axios.delete(`https://fast-simple-crm.onrender.com/api/v1/contract-products/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        await api.delete(`https://fast-simple-crm.onrender.com/api/v1/contract-products/${id}`);
       }
       
       // Ichki jadvaldagi elementni darhol o'chirish
@@ -609,19 +484,14 @@ const Import = () => {
 
   const getPrdQuantity = (q:number) => {
     const prd = products.find(p=>p.id === q)
-    console.log(q);
-    console.log(prd);
-    console.log(products);
     setValPrd(prd?.quantity)
   }
 
   useEffect(()=>{
-    if(valPrd < inForm.quantity) {
-      console.log("yetmaydi");
+    if(valPrd <= inForm.quantity) {
       setValidationQuantity(true)
       
     }else{
-      console.log("yetadi");      
       setValidationQuantity(false)
     }
   }, [inForm.quantity, valPrd])
@@ -635,14 +505,14 @@ const Import = () => {
 
 
   const [isInOpen, setIsInOpen] = useState(false)
-  const {bg, bg2, txt, mainBg} = useM()
+  const {bg2, txt, mainBg} = useM()
   return (
     <CustomLayout>
         <div className={`${mainBg} w-full px-6 py-6`}>
           <h1 className={`text-xl font-bold mb-4`}>Korxonalar bilan bitimlar</h1>
           <div className="overflow-x-auto">
             <table className="border-collapse border border-gray-200 w-full text-sm shadow-md rounded-xl overflow-hidden">
-              <thead className={`${bg2}  uppercase tracking-wide`}>
+              <thead className={`${bg2} text-white uppercase tracking-wide`}>
                 <tr>
                   <th className="px-3 py-3 text-left">Tr</th>
                   <th className="px-3 py-3 text-left">Korxona</th>
@@ -768,7 +638,6 @@ const Import = () => {
                           <button
                             onClick={() => {
                               toggleRow(row.id, row.type);
-                              getCalc(row.id);
                               setSelectedContract(row.id);
                             }}
                             className="p-2 bg-emerald-200 hover:bg-emerald-400 transition rounded-full"
@@ -853,23 +722,17 @@ const Import = () => {
                                   </td>
                                   <td>
                                     {inForm.movement_type === "out" ? (
-                                      <select
-                                        className="border rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-400 outline-none w-11/12"
-                                        value={selectedProduct || ""}
-                                        onChange={(e) => {
-                                          setSelectedProduct(Number(e.target.value));
-                                          getPrdQuantity(Number(e.target.value))
-                                        }}
-                                      >
-                                        <option value="">Mahsulot tanlang</option>
-                                        {products.map((p) => (
-                                          <option key={p.id} value={p.id}>
-                                            {p.name} <br /> (SKU: {p.sku}) <br />
-                                            Narxi: {p.price} <br />
-                                            Soni: {p.quantity}
-                                          </option>
-                                        ))}
-                                      </select>
+                                        <select className="border rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-400 outline-none w-11/12" value={selectedProduct || ""} onChange={(e) => { setSelectedProduct(Number(e.target.value)); getPrdQuantity(Number(e.target.value)) }} >
+                                          {
+                                            products.map(p=>{
+                                              return (
+                                                <option key={p.id} value={p.id}>
+  {p.name} (SKU: {p.sku}) | Narxi: {p.price} | Soni: {p.quantity}
+</option>
+                                              )
+                                            })
+                                          }
+                                        </select>
                                     ) : (
                                       <span className="text-gray-400 italic">
                                         To`lovda mahsulot tanlanmaydi
@@ -914,9 +777,9 @@ const Import = () => {
                                   <td>-</td>
                                   <td></td>
                                   <td className="flex items-center justify-center gap-2">
-                                    <button
+                                    <button disabled={validationQuantity}
                                       onClick={addInRow}
-                                      className="px-3 py-1 bg-emerald-500 hover:bg-emerald-600 transition text-white rounded shadow"
+                                      className={`${validationQuantity ? "bg-gray-600" : "bg-emerald-500 hover:bg-emerald-600"} px-3 py-1  transition text-white rounded shadow`}
                                     >
                                       +
                                     </button>
@@ -1012,7 +875,7 @@ const Import = () => {
                                   sales.length > 0 ? (
                                     <tr className="font-semibold">
                                   <td colSpan={7} className="text-right"></td>
-                                  <td colSpan={2} className="px-3 py-2 text-center text-[12px]">
+                                  <td className="px-3 py-2 text-[12px]">
                                     <b>Jami debit</b> <br />
                                     <strong>
                                       {rowsWithStatus.find((x) => x.id === row.id)?.total_debit
@@ -1021,7 +884,7 @@ const Import = () => {
                                       so`m
                                     </strong>
                                   </td>
-                                  <td colSpan={2} className="px-3 py-2 text-center text-[12px]">
+                                  <td className="px-3 py-2 text-[12px]">
                                     <b>Jami kredit</b>
                                     <br />
                                     <strong>
@@ -1031,7 +894,7 @@ const Import = () => {
                                       so`m
                                     </strong>
                                   </td>
-                                  <td colSpan={1}></td>
+                                  <td ></td>
                                 </tr>
                                   ) : null
                                 }

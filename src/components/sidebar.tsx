@@ -3,12 +3,10 @@
 import { useM } from '@/app/context';
 import Link from 'next/link';
 import React from 'react'
-import { BsArrowLeft } from 'react-icons/bs';
-import { FaHandshake, FaShippingFast, FaUser } from 'react-icons/fa';
-import { FaBell, FaBoxArchive, FaCalendar, FaListCheck, FaNewspaper, FaRing, FaSuitcase, FaUserGroup } from 'react-icons/fa6';
-import { GiBuyCard, GiHand } from 'react-icons/gi';
-import { HiArchiveBox } from 'react-icons/hi2';
-import { MdDashboard, MdPointOfSale, MdSettings } from 'react-icons/md';
+import { FaShippingFast, FaUser } from 'react-icons/fa';
+import { FaBoxArchive} from 'react-icons/fa6';
+import { GiBuyCard } from 'react-icons/gi';
+import { MdDashboard, MdPointOfSale } from 'react-icons/md';
 
 interface sidebarProps {
     id: number;
@@ -57,10 +55,9 @@ const SideBar = () => {
     ]
 
     const {toggleMenu, isOpen, bg2, txt} = useM()
-    // const {isOpen, toggleMenu} = useM()
 // bg-[#013d8c]
   return (
-    <div className={`absolute ${isOpen ? "left-0" : "-left-40"} -left-40 lg:relative lg:left-0 flex flex-col  items-center w-40 h-full py-3.5 ${bg2}`}>
+    <div className={`z-40 absolute ${isOpen ? "left-0" : "-left-40"} -left-40 lg:relative lg:left-0 flex flex-col  items-center w-28 h-full py-3.5 ${bg2}`}>
         {
             sideIcons.map(item=>{
                 return (

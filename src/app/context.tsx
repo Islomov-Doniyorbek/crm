@@ -1,7 +1,6 @@
 'use client'
 import React, { createContext, useContext, useState } from 'react'
-import axiosInstance from './api'  // 🔥 shu joy muhim
-import useApi from './queries'
+import axios from 'axios'
 
 type MenuContextType = {
   isOpen: boolean
@@ -44,7 +43,7 @@ const MProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     phone: string
   ): Promise<void> {
     try {
-      const res = await axiosInstance.post('https://fast-simple-crm.onrender.com/api/v1/auth/register', {
+      const res = await axios.post('https://fast-simple-crm.onrender.com/api/v1/auth/register', {
         email, password, name, username, stir, phone
       })
       console.log('✅ Ro‘yxatdan o‘tdi:', res.data)
@@ -55,30 +54,49 @@ const MProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     }
   }
 
-  // ✅ login
-  const login = async (username: string, password: string) => {
-    try {
-      const res = await axiosInstance.post(
-        'https://fast-simple-crm.onrender.com/api/v1/auth/login',
-        new URLSearchParams({ username, password }),
-        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-      );
 
-      console.log('✅ Login muvaffaqiyatli:', res.data);
-      localStorage.setItem("token", res.data.access_token);
-      localStorage.setItem("refreshToken", res.data.refresh_token);
 
-      // har safar requestda token yuborilishi uchun
-      axiosInstance.defaults.headers.common[
-        "Authorization"
-      ] = `Bearer ${res.data.access_token}`;
 
-      return res.data;
-    } catch (error) {
-      console.error('❌ Login xatosi:', error);
-      throw error;
-    }
-  };
+
+
+
+
+
+// localStorage.clear()
+
+   const login = async (username: string, password: string) => {
+  try {
+    const res = await axios.post(
+      "https://fast-simple-crm.onrender.com/api/v1/auth/login",
+      new URLSearchParams({ username, password }),
+      {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      }
+    );
+
+    const data = res.data;
+
+    // Tokenlarni localStorage ga yozamiz
+    localStorage.setItem("accessToken", data.access_token);
+    localStorage.setItem("refreshToken", data.refresh_token);
+
+
+    return data;
+  } catch (err) {
+    console.error("❌ Login xatosi:", err);
+    throw err;
+  }
+};
+
+
+
+
+
+
+
+
+
+
 
   const [bg, setBg] = useState('bg-[#013d8ce6]')
   const [bg2, setBg2] = useState('bg-[#013d8c]')

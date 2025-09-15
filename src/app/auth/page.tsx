@@ -1,15 +1,8 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useM } from '../context'
-import axios from 'axios'
 import { MdDangerous } from 'react-icons/md'
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  full_name: string;
-}
 const Auth: React.FC = () => {
   const router = useRouter()
   const [password, setPassword] = useState('')
@@ -19,7 +12,6 @@ const Auth: React.FC = () => {
   const [stir, setStir] = useState('')
   const [phone, setPhone] = useState('')
 
-  // Contextdan keladigan login funksiyasini nomini o'zgartirdik
   const { login, register} = useM()
  
 
@@ -105,14 +97,14 @@ const Auth: React.FC = () => {
 
             <button type='button' onClick={()=>setIsForm(true)}>Register</button>
             </form>
-            <form onSubmit={handleRegister} className={`w-full ${isForm ? "flex" : "hidden"} flex-col gap-5 items-center`}>
+            <form onSubmit={handleRegister} className={`w-full ${isForm ? "flex" : "hidden"} flex-col gap-2.5 items-center`}>
               <h3>Register</h3>
               <label className='flex gap-2.5 flex-col w-2/5 text-lg'>
                 Fullname
                 <input
                   type="text"
                   placeholder='...'
-                  className='border border-blue-800 py-2 px-2.5 outline-0 hover:bg-blue-200 cursor-pointer rounded'
+                  className='border border-blue-800 py-1 px-2.5 outline-0 hover:bg-blue-200 cursor-pointer rounded'
                   value={fullname}
                   onChange={(e) => setFullname(e.target.value)}
                 />
@@ -122,7 +114,7 @@ const Auth: React.FC = () => {
                 <input
                   type="text"
                   placeholder='...'
-                  className='border border-blue-800 py-2 px-2.5 outline-0 hover:bg-blue-200 cursor-pointer rounded'
+                  className='border border-blue-800 py-1 px-2.5 outline-0 hover:bg-blue-200 cursor-pointer rounded'
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                 />
@@ -132,7 +124,7 @@ const Auth: React.FC = () => {
                 <input
                   type="text"
                   placeholder='...'
-                  className='border border-blue-800 py-2 px-2.5 outline-0 hover:bg-blue-200 cursor-pointer rounded'
+                  className='border border-blue-800 py-1 px-2.5 outline-0 hover:bg-blue-200 cursor-pointer rounded'
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                 />
@@ -142,7 +134,7 @@ const Auth: React.FC = () => {
                 <input
                   type="text"
                   placeholder='...'
-                  className='border border-blue-800 py-2 px-2.5 outline-0 hover:bg-blue-200 cursor-pointer rounded'
+                  className='border border-blue-800 py-1 px-2.5 outline-0 hover:bg-blue-200 cursor-pointer rounded'
                   value={stir}
                   onChange={(e) => setStir(e.target.value)}
                 />
@@ -152,7 +144,7 @@ const Auth: React.FC = () => {
                 <input
                   type="text"
                   placeholder='...'
-                  className='border border-blue-800 py-2 px-2.5 outline-0 hover:bg-blue-200 cursor-pointer rounded'
+                  className='border border-blue-800 py-1 px-2.5 outline-0 hover:bg-blue-200 cursor-pointer rounded'
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -162,7 +154,7 @@ const Auth: React.FC = () => {
                 <input
                   type="password"
                   placeholder='...'
-                  className='border border-blue-800 py-2 px-2.5 outline-0 hover:bg-blue-200 cursor-pointer rounded'
+                  className='border border-blue-800 py-1 px-2.5 outline-0 hover:bg-blue-200 cursor-pointer rounded'
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />

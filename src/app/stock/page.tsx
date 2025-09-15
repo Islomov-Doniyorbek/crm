@@ -1,37 +1,12 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import CustomLayout from '../customLayout'
-import SideBar from '@/components/sidebar'
-import { FaCheckCircle, FaClosedCaptioning, FaEdit, FaPlusCircle } from 'react-icons/fa';
-import { MdAddToQueue, MdClose, MdCloseFullscreen, MdRemoveCircle } from 'react-icons/md';
-import { FaCircle, FaCirclePlus } from 'react-icons/fa6';
-import axios from 'axios';
+import { FaEdit } from 'react-icons/fa';
+import { MdAddToQueue, MdClose } from 'react-icons/md';
+import { FaCirclePlus } from 'react-icons/fa6';
 import { useM } from '../context';
+import api from '../auth';
 
-interface Contract {
-  id: number;
-  korxona: string;
-  stir: string;
-  shartnoma: string;
-  sana: string;
-  raqam: string;
-  type: "PURCHASE" | "SALES";
-}
-interface ContractProduct {
-  id: number;
-  date: string;
-  movement_type: "IN";
-  quantity: string;
-  price: string;
-  comment: string;
-}
-interface ContractPayment {
-  id: number;
-  date: string;
-  movement_type: "OUT";
-  total_amount: string;
-  comment: string;
-}
 interface Product {
   id: number;
   prdName: string;
@@ -43,17 +18,6 @@ interface Product {
 }
 
 const Import = () => {
-    // const [product, setProduct] = useState<Product[]>([
-    //     {
-    //         id: 0,
-    //         name: "Sabzi",
-    //         sku: "qx-798",
-    //         quantity: 163,
-    //         unit: "kg",
-    //         price: "11200",
-    //         description: "qizil sabzi"
-    //     },
-    // ])
 const [form, setForm] = useState<Product>(
         {
             id: 0,
@@ -88,21 +52,12 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             description: form.description
         }
 
-        const token = localStorage.getItem("token");
-
-        const resAddPrd = await axios.post(
+        const resAddPrd = await api.post(
             "https://fast-simple-crm.onrender.com/api/v1/products",
-            prd,
-            {
-                headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-                },
-            }
+            prd
         );
-
-
         console.log(resAddPrd);
+        
         
         }catch(error){
             console.log(error);
@@ -113,17 +68,11 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     }
     useEffect(()=>{
         const getPrds = async () =>{
-
             try {
-                const token = localStorage.getItem("token")
-                const resProduct = await axios.get("https://fast-simple-crm.onrender.com/api/v1/products/with-quantity", {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                })
+              
+                const resProduct = await api.get("https://fast-simple-crm.onrender.com/api/v1/products/with-quantity")
 
-                console.log(resProduct);
+                
                 setProduct(resProduct.data)
             }catch(error){
                 console.log(error);
@@ -136,21 +85,10 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
     async function deleteItem(id:number) {
     try{
-      const token = localStorage.getItem("token");
-      const res = await axios.delete(`https://fast-simple-crm.onrender.com/api/v1/products/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          }
-
-      });
-        console.log(res);
-
-
       
-      // Ichki jadvaldagi elementni o'chirish
+      const res = await api.delete(`https://fast-simple-crm.onrender.com/api/v1/products/${id}`);
       setProduct(prev => prev.filter(item => item.id !== id));
-      // Status ma'lumotlarini yangilash
-    //   await fetchContractStatus();
+      
       
     } catch(error){
       console.log("O'chirishda xato:", error);
@@ -159,15 +97,15 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   }
 
      const [isOpen, setIsOpen] = useState(false)
-    const {bg2, txt, mainBg} = useM()
+    const {bg2,mainBg} = useM()
 
   return (
     <CustomLayout>
         <div className={`${mainBg} w-full px-6 py-6`}>
-          <h1 className={`text-xl font-bold mb-4 ${txt}`}>SKlad</h1>
+          <h1 className={`text-xl font-bold mb-4`}>SKlad</h1>
           <div className="overflow-x-auto">
             <table className="border-collapse border border-gray-200 w-full text-sm shadow-md rounded-xl overflow-hidden">
-                <thead className={`${bg2} ${txt} uppercase tracking-wide`}>
+                <thead className={`${bg2} text-white uppercase tracking-wide`}>
                     <tr>
                         <th className="px-3 py-3 text-left">
                             Tr
@@ -222,7 +160,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                         </td>
                     </tr>
                 </thead>
-                <tbody className={`divide-y divide-gray-200 ${mainBg==="bg-gray-950" ? "text-white" : "text-black"} ${txt} `}>
+                <tbody className={`divide-y divide-gray-200 ${mainBg==="bg-gray-950" ? "text-white" : "text-black"}} `}>
                     <tr className="hover:bg-red-50 transition">
                         <td className="px-3 py-2">1</td>
                         <td className="px-3 py-2">Stul</td>
@@ -232,9 +170,9 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                         <td className="px-3 py-2">1 233 240</td>
                         <td className="px-3 py-2">MDF</td>
                         <td className="flex py-2 justify-center gap-2 items-center">
-                            <button className="p-2 bg-emerald-200 hover:bg-emerald-400 transition rounded-full"><MdAddToQueue /></button>
-                            <button className="p-2 bg-yellow-200 hover:bg-yellow-400 transition rounded-full"><FaEdit /></button>
-                            <button className="p-2 bg-red-200 hover:bg-red-400 transition rounded-full"><MdClose /></button>
+                            <button className="p-2 bg-emerald-400 hover:bg-emerald-600 transition rounded-full"><MdAddToQueue /></button>
+                            <button className="p-2 bg-yellow-400 hover:bg-yellow-600 transition rounded-full"><FaEdit /></button>
+                            <button className="p-2 bg-red-400 hover:bg-red-600 transition rounded-full"><MdClose /></button>
                         </td>
                     </tr>
                     {
@@ -249,9 +187,9 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                                     <td className="px-3 py-2">{item.price.toLocaleString().replace(/,/g, " ")}</td>
                                     <td className="px-3 py-2">{item.description}</td>
                                     <td className="flex py-2 justify-center gap-2 items-center">
-                                        <button className="p-2 bg-emerald-200 hover:bg-emerald-400 transition rounded-full"><MdAddToQueue /></button>
-                                        <button className="p-2 bg-yellow-200 hover:bg-yellow-400 transition rounded-full"><FaEdit /></button>
-                                        <button onClick={()=>deleteItem(item.id)} className="p-2 bg-red-200 hover:bg-red-400 transition rounded-full"><MdClose /></button>
+                                        <button className="cursor-pointer p-2 bg-emerald-400 hover:bg-emerald-600 transition rounded-full"><MdAddToQueue /></button>
+                                        <button className="cursor-pointer p-2 bg-yellow-400 hover:bg-yellow-600 transition rounded-full"><FaEdit /></button>
+                                        <button onClick={()=>deleteItem(item.id)} className="cursor-pointer p-2 bg-red-400 hover:bg-red-600 transition rounded-full"><MdClose /></button>
                                     </td>
                                 </tr>
                             )

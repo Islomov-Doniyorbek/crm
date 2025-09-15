@@ -1,26 +1,17 @@
 'use client'
 import React, { useState } from 'react'
-import Image from 'next/image'
-import Logo from '../../public/logo.jpg'
-import { FaArrowRight, FaNewspaper, FaPlus, FaSearch, FaUserCircle } from 'react-icons/fa'
+import { FaUserCircle } from 'react-icons/fa'
 import { MdClose, MdMenu, MdSettings } from 'react-icons/md'
 import { useM } from '@/app/context'
 
 const Header: React.FC = () => {
-  const { header } = useM()
-  const [isOpenProfile, setIsOpenProfile] = useState(false)
-  const [addNewBtn, setAddNewBtn] = useState(false)
-  const [addNewCustomer, setAddNewCustomer] = useState(false)
-  const [addNewDeal, setAddNewDeal] = useState(false)
-
-
   const clrMode = [
     {
       id: 0,
-      bg: "bg-[#013d8ce6]",
-      bg2: "bg-[#013d8c]",
+      bg: "bg-[#03045e]",
+      bg2: "bg-[#0077b6]",
       txt: "text-blue-100",
-      mainBg: "bg-white",
+      mainBg: "bg-[#caf0f8]",
       modeName: "Standart"
     },
     {
@@ -80,10 +71,9 @@ const Header: React.FC = () => {
   return (
     <header className={`w-full ${bg}`}>
       <div className="flex py-3 justify-between">
-        <div className="flex items-center gap-4 px-2 w-40 ">
+        <div className="flex items-center gap-4 px-2 w-28 ">
           <MdMenu onClick={()=>toggleMenu()} className={`block lg:hidden text-4xl ${txt}`} />
-          <Image src={Logo} alt="logo" width={40} className='rounded-full' />
-          <span className={`text-xl font-semibold font-[cursive] ${txt}`}>Life ES</span>
+          <span className={`text-xl text-center font-semibold font-[cursive] ${txt}`}>Life ES</span>
         </div>
         <div className={`flex relative justify-end items-center gap-4 px-2 w-40 ${txt} `}>
           <MdSettings onClick={()=>setIsOpenClrList(prev=>!prev)} className='text-4xl cursor-pointer font-semibold font-[cursive] hover:text-yellow-400 hover:drop-shadow-[0_0_6px_rgb(255,255,0)]' />
